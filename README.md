@@ -132,7 +132,7 @@ AuraEvent adapts its visual identity according to the type of celebration, creat
 
 ## Responsive Design
 
-AuraEvent is designed to provide a consistent planning experience across desktop, tablet, and mobile screen sizes.
+AuraEvent is designed to provide a consistent planning experience across desktop and tablet screen sizes.
 
 ### Desktop
 
@@ -141,14 +141,6 @@ The desktop interface provides a comprehensive workspace with dedicated planning
 ### Tablet
 
 ![Tablet Overview](screenshots/tablet-01-overview.png)
-
-### Mobile
-
-The mobile interface adapts navigation, dashboards, forms, and planning modules for smaller screens.
-
-![Mobile Overview](screenshots/mobile-01-overview.png)
-
-![Mobile Budget](screenshots/mobile-03-budget.png)
 
 ---
 
@@ -204,8 +196,6 @@ AuraEvent follows a client-server architecture.
 Follow these instructions to run AuraEvent locally.
 
 ### Prerequisites
-
-Make sure the following are installed:
 
 - Node.js
 - npm
