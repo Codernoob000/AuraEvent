@@ -287,6 +287,30 @@ async function runAllTests() {
     assert.strictEqual(res.headers['x-powered-by'], undefined);
   });
 
+  await test('Deployment: Health Endpoints', 'Both /api/health and /health return healthy status for Render monitoring', async () => {
+    const apiRes = await request('GET', '/api/health');
+    assert.strictEqual(apiRes.status, 200);
+    assert.strictEqual(apiRes.body.status, 'healthy');
+
+    const healthRes = await request('GET', '/health');
+    assert.strictEqual(healthRes.status, 200);
+    assert.strictEqual(healthRes.body.status, 'healthy');
+  });
+
+  await test('Deployment: CORS Policy', 'CORS dynamically allows .onrender.com origins while blocking unauthorized origins', async () => {
+    const renderRes = await request('POST', '/api/ai/ideas', { eventType: 'Invalid' }, {
+      'origin': 'https://auraevent-app.onrender.com'
+    });
+    // Should pass CORS origin check (validation will fail with 400, not CORS error 500)
+    assert.strictEqual(renderRes.headers['access-control-allow-origin'], 'https://auraevent-app.onrender.com');
+
+    const blockedRes = await request('POST', '/api/ai/ideas', { eventType: 'Invalid' }, {
+      'origin': 'https://unauthorized-malicious-site.com'
+    });
+    assert.strictEqual(blockedRes.status, 500);
+    assert.strictEqual(blockedRes.headers['access-control-allow-origin'], undefined);
+  });
+
   await test('Security: Rule 1', 'Zero environment secrets leaked in API responses', async () => {
     const res = await request('GET', '/api/health');
     const responseString = JSON.stringify(res.body);

@@ -1,0 +1,29 @@
+# ==============================================================================
+# AuraEvent — Render Blueprint Specification (render.yaml)
+# Provides automated, zero-config deployment on Render Cloud Platform.
+# ==============================================================================
+
+services:
+  - type: web
+    name: auraevent-planner
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: false
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: GEMINI_MODEL
+        value: gemini-3.8-flash
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: ALLOWED_ORIGIN
+        sync: false
+      - key: MAX_USER_TOKEN_BUDGET
+        value: "10000"
+

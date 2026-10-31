@@ -22,8 +22,8 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || '0.0.0.0';
 const IS_PROD = process.env.NODE_ENV === 'production';
-const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || 'http://localhost:3000';
 
 /* ==========================================================================
    1. Security Headers (Rule 7)
@@ -48,15 +48,30 @@ app.use(helmet({
 /* ==========================================================================
    2. CORS Configuration (Rule 6)
    ========================================================================== */
+const configuredOrigins = (process.env.ALLOWED_ORIGIN || '')
+  .split(',')
+  .map((originStr) => originStr.trim())
+  .filter(Boolean);
+
 const allowedOrigins = [
   'http://localhost:3000',
   'http://127.0.0.1:3000',
-  process.env.ALLOWED_ORIGIN
+  process.env.RENDER_EXTERNAL_URL,
+  ...configuredOrigins
 ].filter(Boolean);
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
+    // Permit requests without Origin header (e.g., same-origin GET, curl, server-to-server)
+    if (!origin) {
+      return callback(null, true);
+    }
+    // Permit explicitly configured allowed origins
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    // Permit Render cloud subdomains (*.onrender.com) for zero-config Render web services
+    if (/^https:\/\/[a-z0-9-]+\.onrender\.com$/i.test(origin)) {
       return callback(null, true);
     }
     return callback(new Error('CORS policy: Origin not allowed.'));
@@ -133,8 +148,8 @@ const eventSyncSchema = z.object({
    5. Application Endpoints
    ========================================================================== */
 
-/** Health verification check */
-app.get('/api/health', (req, res) => {
+/** Health verification check (Supported on /api/health and /health for Render monitoring) */
+app.get(['/api/health', '/health'], (req, res) => {
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
@@ -237,10 +252,8 @@ const isMainModule = process.argv[1] && (
   process.argv[1].endsWith('server.js')
 );
 if (isMainModule) {
-  const server = app.listen(PORT, () => {
-    if (!IS_PROD) {
-      process.stdout.write(`AuraEvent Server running securely on port ${PORT}\n`);
-    }
+  const server = app.listen(PORT, HOST, () => {
+    process.stdout.write(`AuraEvent Server running securely on http://${HOST}:${PORT} (NODE_ENV=${process.env.NODE_ENV || 'development'})\n`);
   });
   // Ensure Node event loop retains active reference on non-interactive Windows shells
   const keepAlive = setInterval(() => {}, 1000 * 60 * 60);

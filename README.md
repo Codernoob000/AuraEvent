@@ -246,6 +246,37 @@ http://localhost:3000
 
 ---
 
+## Deployment on Render
+
+AuraEvent is pre-configured and fully verified for zero-config deployment on **[Render](https://render.com)**.
+
+### Option A — 1-Click Blueprint Deployment (Recommended)
+
+1. Connect your GitHub repository to Render.
+2. Select **New** &rarr; **Blueprint**.
+3. Choose your repository. Render will automatically detect `render.yaml`.
+4. Enter your `GEMINI_API_KEY` when prompted in the environment settings.
+5. Click **Apply**. Render will build and deploy the service automatically.
+
+### Option B — Manual Web Service Deployment
+
+1. On the Render Dashboard, click **New +** &rarr; **Web Service**.
+2. Connect your Git repository.
+3. Configure the service settings:
+   - **Name**: `auraevent-planner` (or your preferred name)
+   - **Environment / Runtime**: `Node`
+   - **Build Command**: `npm install && npm run build`
+   - **Start Command**: `npm start`
+   - **Plan**: `Free`
+   - **Health Check Path**: `/api/health`
+4. In the **Environment Variables** section, add:
+   - `NODE_ENV`: `production`
+   - `GEMINI_API_KEY`: *(Your Google AI Studio API key)*
+   - `GEMINI_MODEL`: `gemini-3.8-flash`
+5. Click **Create Web Service**. Render will provision your URL (e.g. `https://auraevent-planner.onrender.com`).
+
+---
+
 ## Project Structure
 
 ```text
