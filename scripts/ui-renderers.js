@@ -4,7 +4,7 @@
  * Strictly enforces single responsibility, DOMPurify sanitization, and WCAG 2.1 AA.
  */
 
-import { formatCurrency, formatDate, calculateDaysRemaining, calculateDetailedCountdown, sanitizeHTML, buildGoogleCalendarUrl, resolveCssColor, calculateMilestoneDate, normalizeAIPlan } from './utils.js';
+import { formatCurrency, formatDate, calculateDaysRemaining, calculateDetailedCountdown, renderCountdownDisplay, sanitizeHTML, buildGoogleCalendarUrl, resolveCssColor, calculateMilestoneDate, normalizeAIPlan } from './utils.js';
 
 /**
  * Update top masthead metric cards and hero celebration showcase.
@@ -73,26 +73,7 @@ export function renderMastheadMetrics(event) {
   if (heroBudget) heroBudget.textContent = `${formatCurrency(targetBudget, currency)} Budget`;
 
   // Live Countdown Clock
-  const countdown = calculateDetailedCountdown(event.date);
-  const cdDays = document.getElementById('countdown-days');
-  const cdHours = document.getElementById('countdown-hours');
-  const cdMins = document.getElementById('countdown-mins');
-  const cdSecs = document.getElementById('countdown-secs');
-  const cdSummary = document.getElementById('hero-countdown-summary');
-
-  if (cdDays) cdDays.textContent = String(countdown.days).padStart(2, '0');
-  if (cdHours) cdHours.textContent = String(countdown.hours).padStart(2, '0');
-  if (cdMins) cdMins.textContent = String(countdown.minutes).padStart(2, '0');
-  if (cdSecs) cdSecs.textContent = String(countdown.seconds).padStart(2, '0');
-  if (cdSummary) {
-    if (countdown.isPast) {
-      cdSummary.textContent = 'Celebrated';
-    } else if (countdown.days === 0) {
-      cdSummary.textContent = 'Today!';
-    } else {
-      cdSummary.textContent = `${countdown.days} Days to go`;
-    }
-  }
+  renderCountdownDisplay(event.date);
 
   // Overview Operations Left Column
   const plCeiling = document.getElementById('overview-planned-ceiling');
@@ -541,31 +522,13 @@ export function renderVendorModule(event, onDeleteVendor, onUpdateVendorStatus, 
  * Accurately parses color swatches to eliminate blank swatch defects.
  * @param {Object} aiResults - Results returned by Google Gemini proxy.
  */
-export function renderAIResults(rawPlan, activeEvent, onPlanUpdated) {
-  const wrapper = document.getElementById('ai-results-wrapper');
-  if (!wrapper) return;
-  wrapper.innerHTML = '';
-
-  const plan = normalizeAIPlan(rawPlan, activeEvent);
-
-  // Reveal Action Bar and Status Pill
-  const actionsBar = document.getElementById('ai-plan-actions-bar');
-  const statusPill = document.getElementById('ai-plan-status-pill');
-  if (actionsBar) actionsBar.classList.remove('hidden');
-  if (statusPill) statusPill.classList.remove('hidden');
-
-  const modelTag = document.getElementById('ai-plan-model-tag');
-  if (modelTag) {
-    modelTag.textContent = plan.isFallback ? 'offline-curated-engine' : (plan.modelUsed || 'gemini-3.8-flash');
-    modelTag.className = plan.isFallback ? 'badge badge-warning' : 'badge badge-success';
-  }
-
-  const timestampTag = document.getElementById('ai-plan-timestamp');
-  if (timestampTag) {
-    timestampTag.textContent = `Generated ${new Date(plan.createdAt || Date.now()).toLocaleTimeString()}`;
-  }
-
-  // 1. Creative Themes Section
+/**
+ * Render curated aesthetic themes and swatches sub-section.
+ * @param {Object} plan - Normalized AI plan object.
+ * @param {Function} [onPlanUpdated] - Notification callback when user edits fields.
+ * @returns {HTMLElement} The constructed themes section element.
+ */
+function renderThemesSection(plan, onPlanUpdated) {
   const themesSection = document.createElement('div');
   themesSection.className = 'ai-section-box';
   themesSection.innerHTML = `
@@ -635,12 +598,22 @@ export function renderAIResults(rawPlan, activeEvent, onPlanUpdated) {
     card.appendChild(tip);
     themesSection.appendChild(card);
   });
-  wrapper.appendChild(themesSection);
 
-  // 2. Budget Allocations Section
+  return themesSection;
+}
+
+/**
+ * Render budget allocations table sub-section.
+ * @param {Object} plan - Normalized AI plan object.
+ * @param {Function} [onPlanUpdated] - Notification callback when user edits fields.
+ * @returns {HTMLElement} The constructed budget section element.
+ */
+function renderBudgetAllocationsSection(plan, onPlanUpdated) {
   const budgetSection = document.createElement('div');
   budgetSection.className = 'ai-section-box';
-  const totalAllocated = (plan.budgetAllocations || []).filter(b => b.selected).reduce((sum, b) => sum + (Number(b.cost) || 0), 0);
+  const calculateTotal = () => (plan.budgetAllocations || []).filter(b => b.selected).reduce((sum, b) => sum + (Number(b.cost) || 0), 0);
+  const totalAllocated = calculateTotal();
+
   budgetSection.innerHTML = `
     <div class="ai-section-box-header">
       <h4 class="ai-section-box-title">💰 Recommended Budget Allocations (<span class="ai-budget-total-label">${formatCurrency(totalAllocated)}</span>)</h4>
@@ -667,6 +640,11 @@ export function renderAIResults(rawPlan, activeEvent, onPlanUpdated) {
   `;
 
   const budgetTbody = budgetSection.querySelector('.ai-budget-table-body');
+  const updateBudgetTotal = () => {
+    const label = budgetSection.querySelector('.ai-budget-total-label');
+    if (label) label.textContent = formatCurrency(calculateTotal());
+  };
+
   (plan.budgetAllocations || []).forEach((b) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
@@ -703,12 +681,6 @@ export function renderAIResults(rawPlan, activeEvent, onPlanUpdated) {
     budgetTbody.appendChild(tr);
   });
 
-  const updateBudgetTotal = () => {
-    const newTotal = (plan.budgetAllocations || []).filter(b => b.selected).reduce((sum, b) => sum + (Number(b.cost) || 0), 0);
-    const label = budgetSection.querySelector('.ai-budget-total-label');
-    if (label) label.textContent = formatCurrency(newTotal);
-  };
-
   budgetSection.querySelector('.btn-select-all-budget').addEventListener('click', () => {
     (plan.budgetAllocations || []).forEach(b => b.selected = true);
     budgetSection.querySelectorAll('.ai-chk-budget').forEach(chk => chk.checked = true);
@@ -722,9 +694,17 @@ export function renderAIResults(rawPlan, activeEvent, onPlanUpdated) {
     if (onPlanUpdated) onPlanUpdated(plan);
   });
 
-  wrapper.appendChild(budgetSection);
+  return budgetSection;
+}
 
-  // 3. Suggested Milestones Section
+/**
+ * Render run-of-show milestones table sub-section.
+ * @param {Object} plan - Normalized AI plan object.
+ * @param {Object} activeEvent - Current celebration workspace context.
+ * @param {Function} [onPlanUpdated] - Notification callback when user edits fields.
+ * @returns {HTMLElement} The constructed milestones section element.
+ */
+function renderMilestonesSection(plan, activeEvent, onPlanUpdated) {
   const milestonesSection = document.createElement('div');
   milestonesSection.className = 'ai-section-box';
   milestonesSection.innerHTML = `
@@ -810,9 +790,16 @@ export function renderAIResults(rawPlan, activeEvent, onPlanUpdated) {
     if (onPlanUpdated) onPlanUpdated(plan);
   });
 
-  wrapper.appendChild(milestonesSection);
+  return milestonesSection;
+}
 
-  // 4. Suggested Vendors Section
+/**
+ * Render vendor partners table sub-section.
+ * @param {Object} plan - Normalized AI plan object.
+ * @param {Function} [onPlanUpdated] - Notification callback when user edits fields.
+ * @returns {HTMLElement} The constructed vendors section element.
+ */
+function renderVendorsSection(plan, onPlanUpdated) {
   const vendorsSection = document.createElement('div');
   vendorsSection.className = 'ai-section-box';
   vendorsSection.innerHTML = `
@@ -892,20 +879,77 @@ export function renderAIResults(rawPlan, activeEvent, onPlanUpdated) {
     if (onPlanUpdated) onPlanUpdated(plan);
   });
 
-  wrapper.appendChild(vendorsSection);
+  return vendorsSection;
+}
 
-  // 5. Vendor Interview Questions
+/**
+ * Render strategic vendor questions sub-section.
+ * @param {Object} plan - Normalized AI plan object.
+ * @returns {HTMLElement|null} The constructed questions box or null if empty.
+ */
+function renderVendorQuestionsSection(plan) {
   const questions = Array.isArray(plan.vendorQuestions) ? plan.vendorQuestions : [];
-  if (questions.length > 0) {
-    const qBox = document.createElement('div');
-    qBox.className = 'ai-section-box';
-    qBox.innerHTML = `
-      <h4 class="ai-section-box-title" style="margin-bottom: 0.5rem;">📋 Strategic Vendor Interview Questions</h4>
-      <ul style="padding-left: 1.25rem; font-size: var(--text-sm); color: var(--color-text-secondary); line-height: 1.6;">
-        ${questions.map((q) => `<li>${sanitizeHTML(q)}</li>`).join('')}
-      </ul>
-    `;
-    wrapper.appendChild(qBox);
+  if (questions.length === 0) return null;
+
+  const qBox = document.createElement('div');
+  qBox.className = 'ai-section-box';
+  qBox.innerHTML = `
+    <h4 class="ai-section-box-title" style="margin-bottom: 0.5rem;">📋 Strategic Vendor Interview Questions</h4>
+    <ul style="padding-left: 1.25rem; font-size: var(--text-sm); color: var(--color-text-secondary); line-height: 1.6;">
+      ${questions.map((q) => `<li>${sanitizeHTML(q)}</li>`).join('')}
+    </ul>
+  `;
+  return qBox;
+}
+
+/**
+ * Render GenAI generated inspiration themes, vendor questions, and schedule tips.
+ * Accurately parses color swatches to eliminate blank swatch defects.
+ * Decomposes complex sections into modular sub-renderers for high maintainability.
+ * @param {Object} rawPlan - Results returned by Google Gemini proxy.
+ * @param {Object} activeEvent - Current celebration workspace context.
+ * @param {Function} [onPlanUpdated] - Notification callback when user edits fields.
+ */
+export function renderAIResults(rawPlan, activeEvent, onPlanUpdated) {
+  const wrapper = document.getElementById('ai-results-wrapper');
+  if (!wrapper) return;
+  wrapper.innerHTML = '';
+
+  const plan = normalizeAIPlan(rawPlan, activeEvent);
+
+  // Reveal Action Bar and Status Pill
+  const actionsBar = document.getElementById('ai-plan-actions-bar');
+  const statusPill = document.getElementById('ai-plan-status-pill');
+  if (actionsBar) actionsBar.classList.remove('hidden');
+  if (statusPill) statusPill.classList.remove('hidden');
+
+  const modelTag = document.getElementById('ai-plan-model-tag');
+  if (modelTag) {
+    modelTag.textContent = plan.isFallback ? 'offline-curated-engine' : (plan.modelUsed || 'gemini-3.8-flash');
+    modelTag.className = plan.isFallback ? 'badge badge-warning' : 'badge badge-success';
+  }
+
+  const timestampTag = document.getElementById('ai-plan-timestamp');
+  if (timestampTag) {
+    timestampTag.textContent = `Generated ${new Date(plan.createdAt || Date.now()).toLocaleTimeString()}`;
+  }
+
+  // 1. Creative Themes Section
+  wrapper.appendChild(renderThemesSection(plan, onPlanUpdated));
+
+  // 2. Budget Allocations Section
+  wrapper.appendChild(renderBudgetAllocationsSection(plan, onPlanUpdated));
+
+  // 3. Suggested Milestones Section
+  wrapper.appendChild(renderMilestonesSection(plan, activeEvent, onPlanUpdated));
+
+  // 4. Suggested Vendors Section
+  wrapper.appendChild(renderVendorsSection(plan, onPlanUpdated));
+
+  // 5. Vendor Questions
+  const questionsSection = renderVendorQuestionsSection(plan);
+  if (questionsSection) {
+    wrapper.appendChild(questionsSection);
   }
 }
 

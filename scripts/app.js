@@ -8,7 +8,7 @@ import { loadPersistedEvents, saveEventsToStorage, getStoredActiveEventId, saveA
 import { renderMastheadMetrics, renderBudgetModule, renderTimelineRibbon, renderVendorModule, renderAIResults, renderSavedPlansModal, renderPlanPreviewModal } from './ui-renderers.js';
 import { generateEventInspiration, syncEventData } from './api.js';
 import { setupModals, openModal, closeModals, openEditExpenseModal, openEditMilestoneModal, openEditVendorModal } from './modal-controller.js';
-import { generateUUID, calculateMilestoneDate, normalizeAIPlan, formatCurrency, calculateDetailedCountdown } from './utils.js';
+import { generateUUID, calculateMilestoneDate, normalizeAIPlan, formatCurrency, calculateDetailedCountdown, renderCountdownDisplay, applyRecommendationsToCelebration } from './utils.js';
 
 /** In-memory active application state */
 const APP_STATE = {
@@ -25,26 +25,7 @@ let COUNTDOWN_TICKER_INTERVAL = null;
 function updateCountdownTicker() {
   const event = getActiveEvent();
   if (!event) return;
-  const countdown = calculateDetailedCountdown(event.date);
-  const cdDays = document.getElementById('countdown-days');
-  const cdHours = document.getElementById('countdown-hours');
-  const cdMins = document.getElementById('countdown-mins');
-  const cdSecs = document.getElementById('countdown-secs');
-  const cdSummary = document.getElementById('hero-countdown-summary');
-
-  if (cdDays) cdDays.textContent = String(countdown.days).padStart(2, '0');
-  if (cdHours) cdHours.textContent = String(countdown.hours).padStart(2, '0');
-  if (cdMins) cdMins.textContent = String(countdown.minutes).padStart(2, '0');
-  if (cdSecs) cdSecs.textContent = String(countdown.seconds).padStart(2, '0');
-  if (cdSummary) {
-    if (countdown.isPast) {
-      cdSummary.textContent = 'Celebrated';
-    } else if (countdown.days === 0) {
-      cdSummary.textContent = 'Today!';
-    } else {
-      cdSummary.textContent = `${countdown.days} Days to go`;
-    }
-  }
+  renderCountdownDisplay(event.date);
 }
 
 /**
@@ -474,63 +455,7 @@ function setupAIWorkshop() {
     const isEntire = PENDING_APPLY_CONTEXT?.isEntire ?? true;
     const candidates = renderPlanPreviewModal(activeEvt, CURRENT_GENERATED_PLAN, isEntire);
 
-    // De-duplicate & append expenses
-    const existingExpenses = new Set((activeEvt.expenses || []).map((e) => (e.description || '').toLowerCase().trim()));
-    let addedExpenses = 0;
-    (candidates.expensesToAdd || []).forEach((item) => {
-      const descKey = (item.item || '').toLowerCase().trim();
-      if (!existingExpenses.has(descKey)) {
-        activeEvt.expenses.push({
-          id: generateUUID(),
-          category: item.category || 'General',
-          description: item.item || 'Service Item',
-          estimated: Number(item.cost) || 0,
-          actual: Number(item.cost) || 0,
-          status: 'Pending'
-        });
-        existingExpenses.add(descKey);
-        addedExpenses++;
-      }
-    });
-
-    // De-duplicate & append milestones
-    const existingMilestones = new Set((activeEvt.milestones || []).map((m) => (m.title || '').toLowerCase().trim()));
-    let addedMilestones = 0;
-    (candidates.milestonesToAdd || []).forEach((m) => {
-      const titleKey = (m.title || '').toLowerCase().trim();
-      if (!existingMilestones.has(titleKey)) {
-        activeEvt.milestones.push({
-          id: generateUUID(),
-          title: m.title || 'Milestone',
-          phase: m.phase || 'Planning',
-          date: calculateMilestoneDate(activeEvt.date, m.offsetDays),
-          notes: m.notes || 'Recommended by Gemini AI',
-          completed: false
-        });
-        existingMilestones.add(titleKey);
-        addedMilestones++;
-      }
-    });
-    activeEvt.milestones.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-    // De-duplicate & append vendors
-    const existingVendors = new Set((activeEvt.vendors || []).map((v) => (v.name || '').toLowerCase().trim()));
-    let addedVendors = 0;
-    (candidates.vendorsToAdd || []).forEach((v) => {
-      const nameKey = (v.name || '').toLowerCase().trim();
-      if (!existingVendors.has(nameKey)) {
-        activeEvt.vendors.push({
-          id: generateUUID(),
-          category: v.category || 'General',
-          name: v.name || 'Vendor Partner',
-          contact: 'Pending outreach',
-          fee: Number(v.fee) || 0,
-          status: 'Quoted'
-        });
-        existingVendors.add(nameKey);
-        addedVendors++;
-      }
-    });
+    const { addedExpenses, addedMilestones, addedVendors } = applyRecommendationsToCelebration(activeEvt, candidates);
 
     persistAndSync();
     refreshActiveView();

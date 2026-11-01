@@ -63,8 +63,8 @@ export const DEFAULT_CELEBRATIONS = [
     ],
     savedPlans: [],
     vendorChecklist: [
-      { id: 'chk-1', text: 'Confirm final headcount with Heritage Artisan Kitchen (120 guests)', completed: true },
-      { id: 'chk-2', text: 'Sign sound ordinance waiver with Harborview Estate', completed: false }
+      { id: 'chk-b1', text: 'Finalize signature cocktail tasting with Skyline Terrace Lounge', completed: true },
+      { id: 'chk-b2', text: 'Review vinyl DJ playlist and cue tracks with Groove Collective', completed: false }
     ]
   },
   {
@@ -88,8 +88,8 @@ export const DEFAULT_CELEBRATIONS = [
     ],
     savedPlans: [],
     vendorChecklist: [
-      { id: 'chk-1', text: 'Confirm final headcount with Heritage Artisan Kitchen (120 guests)', completed: true },
-      { id: 'chk-2', text: 'Sign sound ordinance waiver with Harborview Estate', completed: false }
+      { id: 'chk-c1', text: 'Submit municipal park & sound permit with City Parks Administration', completed: true },
+      { id: 'chk-c2', text: 'Coordinate load-in and electrical hookups for local food trucks', completed: false }
     ]
   },
   {
@@ -113,7 +113,11 @@ export const DEFAULT_CELEBRATIONS = [
       { id: 'ven-cr1', category: 'Venue', name: 'Metropolitan Convention Center', contact: 'sales@metroconventions.com', fee: 18000, status: 'Confirmed' },
       { id: 'ven-cr2', category: 'AV & Production', name: 'Apex Media Systems', contact: 'ops@apexmedia.com', fee: 8200, status: 'Confirmed' }
     ],
-    savedPlans: []
+    savedPlans: [],
+    vendorChecklist: [
+      { id: 'chk-cr1', text: 'Sign master services agreement with Metropolitan Convention Center', completed: true },
+      { id: 'chk-cr2', text: 'Run plenary stage lighting and livestream rehearsal with Apex Media', completed: false }
+    ]
   }
 ];
 

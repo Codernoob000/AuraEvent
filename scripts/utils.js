@@ -537,3 +537,141 @@ export function normalizeAIPlan(rawPlan, activeEvent = {}) {
   };
 }
 
+/**
+ * Render countdown display values to DOM nodes safely.
+ * Centralizes DOM countdown element updates across views.
+ * @param {string|Date} targetDateISO - ISO target date string or Date object.
+ * @param {Document|HTMLElement} [rootNode=document] - Root DOM document or container.
+ * @returns {Object} Countdown calculation result object.
+ */
+export function renderCountdownDisplay(targetDateISO, rootNode = (typeof document !== 'undefined' ? document : null)) {
+  const countdown = calculateDetailedCountdown(targetDateISO);
+  if (!rootNode) return countdown;
+
+  const cdDays = rootNode.getElementById ? rootNode.getElementById('countdown-days') : rootNode.querySelector?.('#countdown-days');
+  const cdHours = rootNode.getElementById ? rootNode.getElementById('countdown-hours') : rootNode.querySelector?.('#countdown-hours');
+  const cdMins = rootNode.getElementById ? rootNode.getElementById('countdown-mins') : rootNode.querySelector?.('#countdown-mins');
+  const cdSecs = rootNode.getElementById ? rootNode.getElementById('countdown-secs') : rootNode.querySelector?.('#countdown-secs');
+  const cdSummary = rootNode.getElementById ? rootNode.getElementById('hero-countdown-summary') : rootNode.querySelector?.('#hero-countdown-summary');
+
+  if (cdDays) cdDays.textContent = String(countdown.days).padStart(2, '0');
+  if (cdHours) cdHours.textContent = String(countdown.hours).padStart(2, '0');
+  if (cdMins) cdMins.textContent = String(countdown.minutes).padStart(2, '0');
+  if (cdSecs) cdSecs.textContent = String(countdown.seconds).padStart(2, '0');
+
+  if (cdSummary) {
+    if (countdown.isPast) {
+      cdSummary.textContent = 'Celebrated';
+    } else if (countdown.days === 0) {
+      cdSummary.textContent = 'Today!';
+    } else {
+      cdSummary.textContent = `${countdown.days} Days to go`;
+    }
+  }
+
+  return countdown;
+}
+
+/**
+ * Applies recommended AI inspiration items (budget allocations, milestones, vendors)
+ * to a target celebration workspace with de-duplication and without overwriting existing data.
+ * @param {Object} celebration - The target celebration event object.
+ * @param {Object} candidates - Recommendation items to apply.
+ * @param {Array<Object>} [candidates.expensesToAdd] - Selected budget items.
+ * @param {Array<Object>} [candidates.budgetAllocations] - Alternative key for budget items.
+ * @param {Array<Object>} [candidates.milestonesToAdd] - Selected milestone items.
+ * @param {Array<Object>} [candidates.suggestedMilestones] - Alternative key for milestone items.
+ * @param {Array<Object>} [candidates.vendorsToAdd] - Selected vendor items.
+ * @param {Array<Object>} [candidates.suggestedVendors] - Alternative key for vendor items.
+ * @param {Object} [options] - Custom dependency hooks.
+ * @param {Function} [options.idGenerator=generateUUID] - ID generator function.
+ * @param {Function} [options.dateCalculator=calculateMilestoneDate] - Milestone date calculator.
+ * @returns {{ addedExpenses: number, addedMilestones: number, addedVendors: number }} Counts of added items.
+ */
+export function applyRecommendationsToCelebration(celebration, candidates = {}, options = {}) {
+  if (!celebration || typeof celebration !== 'object') {
+    return { addedExpenses: 0, addedMilestones: 0, addedVendors: 0 };
+  }
+
+  const idGen = options.idGenerator || generateUUID;
+  const dateCalc = options.dateCalculator || calculateMilestoneDate;
+
+  celebration.expenses = Array.isArray(celebration.expenses) ? celebration.expenses : [];
+  celebration.milestones = Array.isArray(celebration.milestones) ? celebration.milestones : [];
+  celebration.vendors = Array.isArray(celebration.vendors) ? celebration.vendors : [];
+
+  // 1. Budget & Expenses
+  const budgetList = candidates.expensesToAdd || candidates.budgetAllocations || [];
+  const existingExpenses = new Set(
+    celebration.expenses.map((e) => (e.description || e.item || '').toLowerCase().trim()).filter(Boolean)
+  );
+  let addedExpenses = 0;
+  budgetList.forEach((item) => {
+    const itemDesc = (item.description || item.item || '').trim();
+    const descKey = itemDesc.toLowerCase();
+    if (descKey && !existingExpenses.has(descKey)) {
+      celebration.expenses.push({
+        id: idGen(),
+        category: item.category || 'General',
+        description: itemDesc,
+        estimated: Number(item.estimated || item.cost) || 0,
+        actual: Number(item.actual || item.cost) || 0,
+        status: item.status || 'Pending'
+      });
+      existingExpenses.add(descKey);
+      addedExpenses++;
+    }
+  });
+
+  // 2. Timeline Milestones
+  const milestoneList = candidates.milestonesToAdd || candidates.suggestedMilestones || [];
+  const existingMilestones = new Set(
+    celebration.milestones.map((m) => (m.title || '').toLowerCase().trim()).filter(Boolean)
+  );
+  let addedMilestones = 0;
+  milestoneList.forEach((m) => {
+    const title = (m.title || '').trim();
+    const titleKey = title.toLowerCase();
+    if (titleKey && !existingMilestones.has(titleKey)) {
+      const milestoneDate = m.date || dateCalc(celebration.date, m.offsetDays);
+      celebration.milestones.push({
+        id: idGen(),
+        title: title,
+        phase: m.phase || 'Planning',
+        date: milestoneDate,
+        notes: m.notes || 'Recommended by Gemini AI',
+        completed: Boolean(m.completed)
+      });
+      existingMilestones.add(titleKey);
+      addedMilestones++;
+    }
+  });
+  celebration.milestones.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  // 3. Vendors
+  const vendorList = candidates.vendorsToAdd || candidates.suggestedVendors || [];
+  const existingVendors = new Set(
+    celebration.vendors.map((v) => (v.name || '').toLowerCase().trim()).filter(Boolean)
+  );
+  let addedVendors = 0;
+  vendorList.forEach((v) => {
+    const name = (v.name || '').trim();
+    const nameKey = name.toLowerCase();
+    if (nameKey && !existingVendors.has(nameKey)) {
+      celebration.vendors.push({
+        id: idGen(),
+        category: v.category || 'General',
+        name: name,
+        contact: v.contact || 'Pending outreach',
+        fee: Number(v.fee) || 0,
+        status: v.status || 'Quoted'
+      });
+      existingVendors.add(nameKey);
+      addedVendors++;
+    }
+  });
+
+  return { addedExpenses, addedMilestones, addedVendors };
+}
+
+

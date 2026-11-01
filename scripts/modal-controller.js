@@ -167,70 +167,82 @@ export function setupModals(context) {
 }
 
 /**
+ * Helper to execute a form submission action with consistent lifecycle management.
+ * Handles event prevention, execution, persistence, UI refresh, modal closure, reset, and toast.
+ * @param {Event} e - Form submission event.
+ * @param {Object} handlers - Application handlers context.
+ * @param {Function} actionFn - Specific mutation logic for this form.
+ * @param {string|Function} [successMessage] - Toast notification message or generator.
+ */
+function handleFormAction(e, handlers, actionFn, successMessage) {
+  e.preventDefault();
+  const event = handlers.getActiveEvent();
+  if (!event) return;
+
+  const result = actionFn(event, e.target);
+  if (result === false) return;
+
+  handlers.persistAndSync();
+  handlers.refreshActiveView();
+  closeModals();
+
+  if (e.target && typeof e.target.reset === 'function') {
+    e.target.reset();
+  }
+
+  if (successMessage) {
+    const msg = typeof successMessage === 'function' ? successMessage(event) : successMessage;
+    handlers.showToast(msg);
+  }
+}
+
+/**
  * Attach submission handlers to modal forms.
  * @param {Object} handlers - Event manipulation functions.
  */
 function setupFormSubmissions(handlers) {
-  const { getActiveEvent, persistAndSync, refreshActiveView, showToast, onEventCreated } = handlers;
+  const { onEventCreated, showToast } = handlers;
 
   // Add Expense Form
   document.getElementById('form-add-expense')?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const event = getActiveEvent();
-    const newExpense = {
-      id: generateUUID(),
-      category: document.getElementById('exp-category').value,
-      description: document.getElementById('exp-description').value.trim(),
-      estimated: Number(document.getElementById('exp-estimated').value) || 0,
-      actual: Number(document.getElementById('exp-actual').value) || 0,
-      status: document.getElementById('exp-status').value
-    };
-    event.expenses.push(newExpense);
-    persistAndSync();
-    refreshActiveView();
-    closeModals();
-    e.target.reset();
-    showToast('Expense item added successfully.');
+    handleFormAction(e, handlers, (event) => {
+      event.expenses.push({
+        id: generateUUID(),
+        category: document.getElementById('exp-category').value,
+        description: document.getElementById('exp-description').value.trim(),
+        estimated: Number(document.getElementById('exp-estimated').value) || 0,
+        actual: Number(document.getElementById('exp-actual').value) || 0,
+        status: document.getElementById('exp-status').value
+      });
+    }, 'Expense item added successfully.');
   });
 
   // Add Milestone Form
   document.getElementById('form-add-milestone')?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const event = getActiveEvent();
-    const newMilestone = {
-      id: generateUUID(),
-      title: document.getElementById('ms-title').value.trim(),
-      phase: document.getElementById('ms-phase').value,
-      date: document.getElementById('ms-date').value,
-      notes: document.getElementById('ms-notes').value.trim(),
-      completed: false
-    };
-    event.milestones.push(newMilestone);
-    persistAndSync();
-    refreshActiveView();
-    closeModals();
-    e.target.reset();
-    showToast('Run-of-show milestone created.');
+    handleFormAction(e, handlers, (event) => {
+      event.milestones.push({
+        id: generateUUID(),
+        title: document.getElementById('ms-title').value.trim(),
+        phase: document.getElementById('ms-phase').value,
+        date: document.getElementById('ms-date').value,
+        notes: document.getElementById('ms-notes').value.trim(),
+        completed: false
+      });
+    }, 'Run-of-show milestone created.');
   });
 
   // Add Vendor Form
   document.getElementById('form-add-vendor')?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const event = getActiveEvent();
-    const newVendor = {
-      id: generateUUID(),
-      category: document.getElementById('ven-category').value,
-      name: document.getElementById('ven-name').value.trim(),
-      contact: document.getElementById('ven-contact').value.trim(),
-      fee: Number(document.getElementById('ven-fee').value) || 0,
-      status: document.getElementById('ven-status').value
-    };
-    event.vendors.push(newVendor);
-    persistAndSync();
-    refreshActiveView();
-    closeModals();
-    e.target.reset();
-    showToast('Vendor partner registered.');
+    handleFormAction(e, handlers, (event) => {
+      event.vendors.push({
+        id: generateUUID(),
+        category: document.getElementById('ven-category').value,
+        name: document.getElementById('ven-name').value.trim(),
+        contact: document.getElementById('ven-contact').value.trim(),
+        fee: Number(document.getElementById('ven-fee').value) || 0,
+        status: document.getElementById('ven-status').value
+      });
+    }, 'Vendor partner registered.');
   });
 
   // Create New Celebration Form
@@ -260,93 +272,73 @@ function setupFormSubmissions(handlers) {
 
   // Edit Active Celebration Form
   document.getElementById('form-edit-event')?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const event = getActiveEvent();
-    if (!event) return;
-    event.name = document.getElementById('edit-evt-name').value.trim();
-    event.type = document.getElementById('edit-evt-type').value;
-    event.currency = document.getElementById('edit-evt-currency').value;
-    event.date = document.getElementById('edit-evt-date').value;
-    event.budget = Number(document.getElementById('edit-evt-budget').value) || 10000;
-    event.guestCount = Number(document.getElementById('edit-evt-guests').value) || 50;
-    event.themeNotes = document.getElementById('edit-evt-theme-notes').value.trim();
-    persistAndSync();
-    refreshActiveView();
-    closeModals();
-    showToast(`Updated details for "${event.name}".`);
+    handleFormAction(e, handlers, (event) => {
+      event.name = document.getElementById('edit-evt-name').value.trim();
+      event.type = document.getElementById('edit-evt-type').value;
+      event.currency = document.getElementById('edit-evt-currency').value;
+      event.date = document.getElementById('edit-evt-date').value;
+      event.budget = Number(document.getElementById('edit-evt-budget').value) || 10000;
+      event.guestCount = Number(document.getElementById('edit-evt-guests').value) || 50;
+      event.themeNotes = document.getElementById('edit-evt-theme-notes').value.trim();
+    }, (event) => `Updated details for "${event.name}".`);
   });
 
   // Edit Expense Form
   document.getElementById('form-edit-expense')?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const event = getActiveEvent();
-    const id = document.getElementById('edit-exp-id').value;
-    const item = (event.expenses || []).find((x) => x.id === id);
-    if (item) {
+    handleFormAction(e, handlers, (event) => {
+      const id = document.getElementById('edit-exp-id').value;
+      const item = (event.expenses || []).find((x) => x.id === id);
+      if (!item) return false;
       item.category = document.getElementById('edit-exp-category').value;
       item.description = document.getElementById('edit-exp-description').value.trim();
       item.estimated = Number(document.getElementById('edit-exp-estimated').value) || 0;
       item.actual = Number(document.getElementById('edit-exp-actual').value) || 0;
       item.status = document.getElementById('edit-exp-status').value;
-      persistAndSync();
-      refreshActiveView();
-      closeModals();
-      showToast('Expense item updated.');
-    }
+    }, 'Expense item updated.');
   });
 
   // Edit Milestone Form
   document.getElementById('form-edit-milestone')?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const event = getActiveEvent();
-    const id = document.getElementById('edit-ms-id').value;
-    const item = (event.milestones || []).find((x) => x.id === id);
-    if (item) {
+    handleFormAction(e, handlers, (event) => {
+      const id = document.getElementById('edit-ms-id').value;
+      const item = (event.milestones || []).find((x) => x.id === id);
+      if (!item) return false;
       item.title = document.getElementById('edit-ms-title').value.trim();
       item.phase = document.getElementById('edit-ms-phase').value;
       item.date = document.getElementById('edit-ms-date').value;
       item.notes = document.getElementById('edit-ms-notes').value.trim();
-      persistAndSync();
-      refreshActiveView();
-      closeModals();
-      showToast('Milestone updated.');
-    }
+    }, 'Milestone updated.');
   });
 
   // Edit Vendor Form
   document.getElementById('form-edit-vendor')?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const event = getActiveEvent();
-    const id = document.getElementById('edit-ven-id').value;
-    const item = (event.vendors || []).find((x) => x.id === id);
-    if (item) {
+    handleFormAction(e, handlers, (event) => {
+      const id = document.getElementById('edit-ven-id').value;
+      const item = (event.vendors || []).find((x) => x.id === id);
+      if (!item) return false;
       item.category = document.getElementById('edit-ven-category').value;
       item.name = document.getElementById('edit-ven-name').value.trim();
       item.contact = document.getElementById('edit-ven-contact').value.trim();
       item.fee = Number(document.getElementById('edit-ven-fee').value) || 0;
       item.status = document.getElementById('edit-ven-status').value;
-      persistAndSync();
-      refreshActiveView();
-      closeModals();
-      showToast('Vendor updated.');
-    }
+    }, 'Vendor updated.');
   });
 
   // Add Vendor Checklist Task Form
   document.getElementById('form-add-checklist-task')?.addEventListener('submit', (e) => {
     e.preventDefault();
-    const event = getActiveEvent();
+    const event = handlers.getActiveEvent();
     const input = document.getElementById('input-checklist-task');
     const taskText = input?.value?.trim();
-    if (taskText) {
+    if (taskText && event) {
       event.vendorChecklist = Array.isArray(event.vendorChecklist) ? event.vendorChecklist : [];
       event.vendorChecklist.push({
         id: generateUUID(),
         text: taskText,
         completed: false
       });
-      persistAndSync();
-      refreshActiveView();
+      handlers.persistAndSync();
+      handlers.refreshActiveView();
       if (input) input.value = '';
       showToast('Vendor task added to checklist.');
     }

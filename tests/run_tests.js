@@ -23,7 +23,9 @@ import {
   generateICalendarPayload,
   resolveCssColor,
   calculateMilestoneDate,
-  normalizeAIPlan
+  normalizeAIPlan,
+  renderCountdownDisplay,
+  applyRecommendationsToCelebration
 } from '../scripts/utils.js';
 
 import {
@@ -208,6 +210,25 @@ async function runAllTests() {
     assert.ok(ics.includes('VERSION:2.0'));
     assert.ok(ics.includes('SUMMARY:Reception'));
     assert.ok(ics.includes('END:VCALENDAR'));
+  });
+
+  await test('Unit: utils.js', 'renderCountdownDisplay calculates and maps countdown to mock DOM', () => {
+    const mockElements = {
+      'countdown-days': { textContent: '' },
+      'countdown-hours': { textContent: '' },
+      'countdown-mins': { textContent: '' },
+      'countdown-secs': { textContent: '' },
+      'hero-countdown-summary': { textContent: '' }
+    };
+    const mockRoot = {
+      getElementById: (id) => mockElements[id] || null
+    };
+    const futureDate = new Date(Date.now() + 3 * 86400 * 1000 + 7200 * 1000).toISOString();
+    const result = renderCountdownDisplay(futureDate, mockRoot);
+    assert.ok(result.days >= 3);
+    assert.strictEqual(result.isPast, false);
+    assert.strictEqual(mockElements['countdown-days'].textContent, String(result.days).padStart(2, '0'));
+    assert.ok(mockElements['hero-countdown-summary'].textContent.includes('Days to go'));
   });
 
   /* ======================================================================
@@ -698,27 +719,13 @@ async function runAllTests() {
     };
 
     const plan = normalizeAIPlan({}, celebration);
-    // Simulate Plan Application (Entire)
-    const existingExpenses = new Set(celebration.expenses.map(e => e.description.toLowerCase().trim()));
-    plan.budgetAllocations.forEach(b => {
-      if (!existingExpenses.has(b.item.toLowerCase().trim())) {
-        celebration.expenses.push({ id: generateUUID(), description: b.item, estimated: b.cost, actual: b.cost, category: b.category });
-      }
-    });
+    // Apply Plan (Entire) via production helper
+    const result = applyRecommendationsToCelebration(celebration, plan);
 
-    const existingMilestones = new Set(celebration.milestones.map(m => m.title.toLowerCase().trim()));
-    plan.suggestedMilestones.forEach(m => {
-      if (!existingMilestones.has(m.title.toLowerCase().trim())) {
-        celebration.milestones.push({ id: generateUUID(), title: m.title, date: calculateMilestoneDate(celebration.date, m.offsetDays), completed: false });
-      }
-    });
-
-    const existingVendors = new Set(celebration.vendors.map(v => v.name.toLowerCase().trim()));
-    plan.suggestedVendors.forEach(v => {
-      if (!existingVendors.has(v.name.toLowerCase().trim())) {
-        celebration.vendors.push({ id: generateUUID(), name: v.name, category: v.category, fee: v.fee });
-      }
-    });
+    // Verification: Correct counts reported
+    assert.ok(result.addedExpenses > 0);
+    assert.ok(result.addedMilestones > 0);
+    assert.ok(result.addedVendors > 0);
 
     // Verification: Existing data preserved
     assert.ok(celebration.expenses.some(e => e.id === 'exp-orig'));
@@ -748,20 +755,15 @@ async function runAllTests() {
       suggestedVendors: [{ name: 'Artisan Culinary & Hospitality', category: 'Catering', fee: 8000 }]
     };
 
-    // Filter duplicates
-    const newExpenses = duplicateCandidate.budgetAllocations.filter(b =>
-      !celebration.expenses.some(e => e.description.toLowerCase().trim() === b.item.toLowerCase().trim())
-    );
-    const newMilestones = duplicateCandidate.suggestedMilestones.filter(m =>
-      !celebration.milestones.some(ex => ex.title.toLowerCase().trim() === m.title.toLowerCase().trim())
-    );
-    const newVendors = duplicateCandidate.suggestedVendors.filter(v =>
-      !celebration.vendors.some(ex => ex.name.toLowerCase().trim() === v.name.toLowerCase().trim())
-    );
+    // Apply duplicate candidate through production helper
+    const result = applyRecommendationsToCelebration(celebration, duplicateCandidate);
 
-    assert.strictEqual(newExpenses.length, 0, 'Duplicate expense must be filtered out');
-    assert.strictEqual(newMilestones.length, 0, 'Duplicate milestone must be filtered out');
-    assert.strictEqual(newVendors.length, 0, 'Duplicate vendor must be filtered out');
+    assert.strictEqual(result.addedExpenses, 0, 'Duplicate expense must be filtered out');
+    assert.strictEqual(result.addedMilestones, 0, 'Duplicate milestone must be filtered out');
+    assert.strictEqual(result.addedVendors, 0, 'Duplicate vendor must be filtered out');
+    assert.strictEqual(celebration.expenses.length, 1);
+    assert.strictEqual(celebration.milestones.length, 1);
+    assert.strictEqual(celebration.vendors.length, 1);
   });
 
   await test('AI Workflow: Saved Plans & Workspace Isolation', 'Saving plan to Event A isolates it from Event B', () => {

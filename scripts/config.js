@@ -37,7 +37,42 @@ export const APP_CONFIG = Object.freeze({
   STORAGE_KEYS: Object.freeze({
     EVENTS: 'aura_event_planner_data_v1',
     ACTIVE_EVENT_ID: 'aura_event_planner_active_id_v1',
-    THEME: 'aura_event_planner_theme_v1'
-  })
-});
+    THEME: 'aura_event_planner_theme_v1',
+    OWNER_TOKEN_PREFIX: 'aura_owner_',
+    TOKEN_BUDGET: 'aura_event_token_budget_v1'
+  }),
 
+  /** Supported event types across planner */
+  EVENT_TYPES: Object.freeze([
+    'Wedding',
+    'Birthday',
+    'Corporate Event',
+    'Community Event',
+    'Anniversary',
+    'Social Gathering'
+  ]),
+
+  /** Supported currencies */
+  CURRENCIES: Object.freeze({
+    USD: 'USD',
+    INR: 'INR'
+  }),
+
+  /** Default proportional budget allocation ratios */
+  DEFAULT_BUDGET_RATIOS: Object.freeze({
+    CATERING: 0.40,
+    VENUE: 0.25,
+    DECOR: 0.20,
+    ENTERTAINMENT: 0.15,
+    PHOTOGRAPHY: 0.15
+  }),
+
+  /** Vendor contract lifecycle states */
+  VENDOR_STATUSES: Object.freeze([
+    'Researching',
+    'Quoted',
+    'Contract Sent',
+    'Confirmed',
+    'Completed'
+  ])
+});

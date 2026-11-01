@@ -224,7 +224,8 @@ export async function fetchEventData(eventId) {
 export async function syncEventData(eventData) {
   if (!eventData || !eventData.id) return false;
   const requestUrl = `${APP_CONFIG.API_BASE_URL}/events/${encodeURIComponent(eventData.id)}`;
-  const tokenKey = `aura_owner_${eventData.id}`;
+  const tokenPrefix = APP_CONFIG.STORAGE_KEYS?.OWNER_TOKEN_PREFIX || 'aura_owner_';
+  const tokenKey = `${tokenPrefix}${eventData.id}`;
   let token = null;
   try {
     token = localStorage.getItem(tokenKey);
