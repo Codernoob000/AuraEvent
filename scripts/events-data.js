@@ -5,8 +5,38 @@
 
 import { APP_CONFIG } from './config.js';
 
+/**
+ * Safe getter for browser localStorage with explicit error handling.
+ * @param {string} key - Storage key.
+ * @returns {string|null} Stored value or null.
+ */
+function safeStorageGet(key) {
+  try {
+    return localStorage.getItem(key);
+  } catch (storageError) {
+    // Non-blocking fallback for storage access restrictions (e.g. private browsing)
+    return null;
+  }
+}
+
+/**
+ * Safe setter for browser localStorage with explicit error handling.
+ * @param {string} key - Storage key.
+ * @param {string} value - Stored string value.
+ * @returns {boolean} True if persisted successfully, false on failure.
+ */
+function safeStorageSet(key, value) {
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch (storageError) {
+    // Gracefully handle storage quota exhaustion or private browsing restrictions
+    return false;
+  }
+}
+
 /** Default pre-seeded celebration templates */
-export const DEFAULT_CELEBRATIONS = [
+export const DEFAULT_CELEBRATIONS = Object.freeze([
   {
     id: 'evt-wedding-01',
     name: "Maya & Leo's Autumn Wedding",
@@ -119,43 +149,56 @@ export const DEFAULT_CELEBRATIONS = [
       { id: 'chk-cr2', text: 'Run plenary stage lighting and livestream rehearsal with Apex Media', completed: false }
     ]
   }
-];
+]);
+
+/**
+ * Normalize an event payload structure ensuring all collection arrays exist.
+ * @param {Object} evt - Raw event payload.
+ * @returns {Object} Normalized event object.
+ */
+function normalizeEventRecord(evt) {
+  return {
+    ...evt,
+    expenses: Array.isArray(evt.expenses) ? evt.expenses : [],
+    milestones: Array.isArray(evt.milestones) ? evt.milestones : [],
+    vendors: Array.isArray(evt.vendors) ? evt.vendors : [],
+    savedPlans: Array.isArray(evt.savedPlans) ? evt.savedPlans : [],
+    vendorChecklist: Array.isArray(evt.vendorChecklist) ? evt.vendorChecklist : []
+  };
+}
 
 /**
  * Load persisted celebration events from browser localStorage.
- * Falls back to DEFAULT_CELEBRATIONS if storage is empty.
+ * Falls back to DEFAULT_CELEBRATIONS if storage is empty or invalid.
  * @returns {Array<Object>} List of celebration event objects.
  */
 export function loadPersistedEvents() {
+  const rawData = safeStorageGet(APP_CONFIG.STORAGE_KEYS.EVENTS);
+  if (!rawData) return DEFAULT_CELEBRATIONS;
+
   try {
-    const rawData = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.EVENTS);
-    if (!rawData) return DEFAULT_CELEBRATIONS;
     const parsed = JSON.parse(rawData);
     if (Array.isArray(parsed) && parsed.length > 0) {
-      return parsed.map((evt) => ({
-        ...evt,
-        expenses: Array.isArray(evt.expenses) ? evt.expenses : [],
-        milestones: Array.isArray(evt.milestones) ? evt.milestones : [],
-        vendors: Array.isArray(evt.vendors) ? evt.vendors : [],
-        savedPlans: Array.isArray(evt.savedPlans) ? evt.savedPlans : [],
-        vendorChecklist: Array.isArray(evt.vendorChecklist) ? evt.vendorChecklist : []
-      }));
+      return parsed.map(normalizeEventRecord);
     }
-    return DEFAULT_CELEBRATIONS;
-  } catch {
+  } catch (parseError) {
+    // Malformed JSON falls back gracefully to default seed events
     return DEFAULT_CELEBRATIONS;
   }
+  return DEFAULT_CELEBRATIONS;
 }
 
 /**
  * Save current list of events to browser localStorage.
  * @param {Array<Object>} eventsList - Array of event objects.
+ * @returns {boolean} True if successfully saved.
  */
 export function saveEventsToStorage(eventsList) {
   try {
-    localStorage.setItem(APP_CONFIG.STORAGE_KEYS.EVENTS, JSON.stringify(eventsList));
-  } catch {
-    // Storage quota handled gracefully
+    const serialized = JSON.stringify(eventsList);
+    return safeStorageSet(APP_CONFIG.STORAGE_KEYS.EVENTS, serialized);
+  } catch (serializeError) {
+    return false;
   }
 }
 
@@ -165,26 +208,18 @@ export function saveEventsToStorage(eventsList) {
  * @returns {string} Active event ID.
  */
 export function getStoredActiveEventId(eventsList) {
-  try {
-    const storedId = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.ACTIVE_EVENT_ID);
-    if (storedId && eventsList.some((evt) => evt.id === storedId)) {
-      return storedId;
-    }
-  } catch {
-    // Fallback to first item
+  const storedId = safeStorageGet(APP_CONFIG.STORAGE_KEYS.ACTIVE_EVENT_ID);
+  if (storedId && eventsList.some((evt) => evt.id === storedId)) {
+    return storedId;
   }
-  return eventsList[0]?.id || 'evt-wedding-01';
+  return eventsList[0]?.id || DEFAULT_CELEBRATIONS[0].id;
 }
 
 /**
  * Save the active event ID to storage.
  * @param {string} eventId - Unique event identifier.
+ * @returns {boolean} True if saved.
  */
 export function saveActiveEventId(eventId) {
-  try {
-    localStorage.setItem(APP_CONFIG.STORAGE_KEYS.ACTIVE_EVENT_ID, eventId);
-  } catch {
-    // Silently continue
-  }
+  return safeStorageSet(APP_CONFIG.STORAGE_KEYS.ACTIVE_EVENT_ID, String(eventId));
 }
-

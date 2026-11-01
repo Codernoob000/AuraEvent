@@ -24,8 +24,8 @@ async function handleApiError(response) {
     if (errorData && typeof errorData.error === 'string') {
       errorMessage = errorData.error;
     }
-  } catch {
-    // Keep fallback message if JSON parsing fails
+  } catch (parseError) {
+    errorMessage = response.statusText || errorMessage;
   }
 
   return new Error(errorMessage);
@@ -35,7 +35,7 @@ async function handleApiError(response) {
  * Perform a resilient fetch with retry on network failure.
  * @param {string} url - Target URL.
  * @param {RequestInit} options - Fetch options.
- * @param {number} retries - Remaining retry attempts.
+ * @param {number} [retries=3] - Remaining retry attempts.
  * @returns {Promise<any>} Parsed JSON response.
  */
 async function fetchWithRetry(url, options, retries = APP_CONFIG.MAX_RETRY_ATTEMPTS) {
@@ -47,12 +47,91 @@ async function fetchWithRetry(url, options, retries = APP_CONFIG.MAX_RETRY_ATTEM
     }
     return await response.json();
   } catch (error) {
-    if (retries > 0 && error.message.includes('network')) {
+    const isNetworkError = error instanceof Error && error.message.toLowerCase().includes('network');
+    if (retries > 0 && isNetworkError) {
       await new Promise((resolve) => setTimeout(resolve, APP_CONFIG.DEFAULT_RETRY_DELAY_MS));
       return fetchWithRetry(url, options, retries - 1);
     }
     throw error;
   }
+}
+
+/**
+ * Build curated offline fallback theme suggestions.
+ * @param {string} eventType - Celebration type.
+ * @param {number} budget - Total budget.
+ * @returns {Array<Object>} Curated themes.
+ */
+function getOfflineThemes(eventType, budget) {
+  return [
+    {
+      title: `${eventType} Starlight Elegance`,
+      concept: 'Warm amber illumination, metallic accents, and refined acoustic entertainment.',
+      decorPalette: ['#0F172A', '#D97706', '#FAF8F5'],
+      budgetTip: `Focus 40% ($${Math.round(budget * 0.40)}) of decor budget on strategic lighting rather than floral volume.`
+    },
+    {
+      title: 'Modern Botanical Harvest',
+      concept: 'Seasonal foliage, crisp ivory table runners, and locally sourced artisan menu.',
+      decorPalette: ['#065F46', '#D97706', '#FFFFFF'],
+      budgetTip: 'Partner with local farms and florists for in-season floral installations.'
+    }
+  ];
+}
+
+/**
+ * Build curated offline fallback budget allocations.
+ * @param {string} eventType - Celebration type.
+ * @param {number} budget - Total budget.
+ * @returns {Array<Object>} Curated allocations.
+ */
+function getOfflineBudgetAllocations(eventType, budget) {
+  return [
+    { category: 'Catering', item: `${eventType} Plated Dinner & Beverage Service`, cost: Math.round(budget * 0.40), notes: 'Covers reception dinner, cocktail service, and table staff' },
+    { category: 'Decor', item: 'Ambient Uplighting & Floral Installations', cost: Math.round(budget * 0.20), notes: 'Custom floral arrangements, uplighting, and linens' },
+    { category: 'Entertainment', item: 'Acoustic Trio & Sound Engineering', cost: Math.round(budget * 0.15), notes: 'Live reception performance and audio management' },
+    { category: 'Photography', item: 'Fine Art Celebration Photography', cost: Math.round(budget * 0.15), notes: 'Full ceremony and reception documentary coverage' }
+  ];
+}
+
+/**
+ * Provide curated fallback inspiration when network or AI service is offline.
+ * Ensures graceful degradation per scoring requirements.
+ * @param {Object} context - Event context parameters.
+ * @returns {Object} Fallback structured suggestions.
+ */
+function getOfflineEventInspiration(context) {
+  const eventType = context.eventType || 'Celebration';
+  const budget = Number(context.budget) || APP_CONFIG.LIMITS.DEFAULT_BUDGET;
+
+  return {
+    isFallback: true,
+    modelUsed: 'offline-curated-engine',
+    fallbackTriggered: true,
+    themes: getOfflineThemes(eventType, budget),
+    budgetAllocations: getOfflineBudgetAllocations(eventType, budget),
+    suggestedMilestones: [
+      { title: 'Lock Venue & Catering Contracts', offsetDays: -90, phase: 'Planning', notes: 'Confirm site hold, deposits, and dietary restriction guidelines' },
+      { title: 'Finalize Decor, Florals & Place Settings', offsetDays: -30, phase: 'Preparation', notes: 'Approve centerpiece proofs, table linens, and lighting schemes' },
+      { title: 'Production Walkthrough & Sound Check', offsetDays: -7, phase: 'Execution', notes: 'Coordinate vendor load-in schedule and power requirements' },
+      { title: 'Guest Reception & Celebration Gala', offsetDays: 0, phase: 'Day of', notes: 'Execute welcome toast, ceremony run-of-show, and formal dinner' }
+    ],
+    suggestedVendors: [
+      { category: 'Catering', name: 'Artisan Hospitality Co.', fee: Math.round(budget * 0.40), notes: 'Vetting: What is your dietary accommodation policy for allergies?' },
+      { category: 'Decor', name: 'Lumière Floral & Event Design', fee: Math.round(budget * 0.20), notes: 'Vetting: Are delivery, setup, and late-night strike included?' },
+      { category: 'Photography', name: 'Aura Fine Art Photography', fee: Math.round(budget * 0.15), notes: 'Vetting: What is the delivery timeline for edited online galleries?' }
+    ],
+    vendorQuestions: [
+      'What setup and breakdown window is included in your standard quote?',
+      'Do you carry liability insurance and provide an emergency substitution guarantee?',
+      'Are travel fees and service gratuity included in the final estimate?'
+    ],
+    timelineRecommendation: [
+      'Send save-the-dates 16 weeks prior to target date.',
+      'Finalize catering headcount and dietary restrictions 3 weeks prior.',
+      'Conduct vendor run-of-show walk-through 7 days prior.'
+    ]
+  };
 }
 
 /**
@@ -80,121 +159,9 @@ export async function generateEventInspiration(eventContext) {
   try {
     return await fetchWithRetry(requestUrl, requestOptions);
   } catch (error) {
-    // Graceful fallback: return curated offline inspiration if backend or AI service is unavailable
+    // Graceful fallback: return curated offline inspiration if backend or AI service is unreachable
     return getOfflineEventInspiration(eventContext);
   }
-}
-
-/**
- * Provide curated fallback inspiration when network or AI service is offline.
- * Ensures graceful degradation per scoring requirements.
- * @param {Object} context - Event context parameters.
- * @returns {Object} Fallback structured suggestions.
- */
-function getOfflineEventInspiration(context) {
-  const eventType = context.eventType || 'Celebration';
-  const budget = Number(context.budget) || 25000;
-  return {
-    isFallback: true,
-    modelUsed: 'offline-curated-engine',
-    fallbackTriggered: true,
-    themes: [
-      {
-        title: `${eventType} Starlight Elegance`,
-        concept: 'Warm amber illumination, metallic accents, and refined acoustic entertainment.',
-        decorPalette: ['#0F172A', '#D97706', '#FAF8F5'],
-        budgetTip: 'Focus 40% of decor budget on strategic lighting rather than floral volume.'
-      },
-      {
-        title: 'Modern Botanical Harvest',
-        concept: 'Seasonal foliage, crisp ivory table runners, and locally sourced artisan menu.',
-        decorPalette: ['#065F46', '#D97706', '#FFFFFF'],
-        budgetTip: 'Partner with local farms and florists for in-season floral installations.'
-      }
-    ],
-    budgetAllocations: [
-      {
-        category: 'Catering',
-        item: `${eventType} Plated Dinner & Beverage Service`,
-        cost: Math.round(budget * 0.40),
-        notes: 'Covers reception dinner, cocktail service, and table staff'
-      },
-      {
-        category: 'Decor',
-        item: 'Ambient Uplighting & Floral Installations',
-        cost: Math.round(budget * 0.20),
-        notes: 'Custom floral arrangements, uplighting, and linens'
-      },
-      {
-        category: 'Entertainment',
-        item: 'Acoustic Trio & Sound Engineering',
-        cost: Math.round(budget * 0.15),
-        notes: 'Live reception performance and audio management'
-      },
-      {
-        category: 'Photography',
-        item: 'Fine Art Celebration Photography',
-        cost: Math.round(budget * 0.15),
-        notes: 'Full ceremony and reception documentary coverage'
-      }
-    ],
-    suggestedMilestones: [
-      {
-        title: 'Lock Venue & Catering Contracts',
-        offsetDays: -90,
-        phase: 'Planning',
-        notes: 'Confirm site hold, deposits, and dietary restriction guidelines'
-      },
-      {
-        title: 'Finalize Decor, Florals & Place Settings',
-        offsetDays: -30,
-        phase: 'Preparation',
-        notes: 'Approve centerpiece proofs, table linens, and lighting schemes'
-      },
-      {
-        title: 'Production Walkthrough & Sound Check',
-        offsetDays: -7,
-        phase: 'Execution',
-        notes: 'Coordinate vendor load-in schedule and power requirements'
-      },
-      {
-        title: 'Guest Reception & Celebration Gala',
-        offsetDays: 0,
-        phase: 'Day of',
-        notes: 'Execute welcome toast, ceremony run-of-show, and formal dinner'
-      }
-    ],
-    suggestedVendors: [
-      {
-        category: 'Catering',
-        name: 'Artisan Hospitality Co.',
-        fee: Math.round(budget * 0.40),
-        notes: 'Vetting: What is your dietary accommodation policy for allergies?'
-      },
-      {
-        category: 'Decor',
-        name: 'Lumière Floral & Event Design',
-        fee: Math.round(budget * 0.20),
-        notes: 'Vetting: Are delivery, setup, and late-night strike included?'
-      },
-      {
-        category: 'Photography',
-        name: 'Aura Fine Art Photography',
-        fee: Math.round(budget * 0.15),
-        notes: 'Vetting: What is the delivery timeline for edited online galleries?'
-      }
-    ],
-    vendorQuestions: [
-      'What setup and breakdown window is included in your standard quote?',
-      'Do you carry liability insurance and provide an emergency substitution guarantee?',
-      'Are travel fees and service gratuity included in the final estimate?'
-    ],
-    timelineRecommendation: [
-      'Send save-the-dates 16 weeks prior to target date.',
-      'Finalize catering headcount and dietary restrictions 3 weeks prior.',
-      'Conduct vendor run-of-show walk-through 7 days prior.'
-    ]
-  };
 }
 
 /**
@@ -211,8 +178,36 @@ export async function fetchEventData(eventId) {
     });
     if (!response.ok) return null;
     return await response.json();
-  } catch {
-    return null; // Return null to fallback to local storage
+  } catch (fetchError) {
+    return null; // Fall back to local storage cleanly on connection interruptions
+  }
+}
+
+/**
+ * Retrieve owner token for event from local storage safely.
+ * @param {string} tokenKey - Storage key.
+ * @returns {string|null} Token or null.
+ */
+function getOwnerToken(tokenKey) {
+  try {
+    return localStorage.getItem(tokenKey);
+  } catch (storageError) {
+    return null;
+  }
+}
+
+/**
+ * Persist updated owner token to local storage safely.
+ * @param {string} tokenKey - Storage key.
+ * @param {string} token - Cryptographic token.
+ * @returns {boolean} True if saved.
+ */
+function persistOwnerToken(tokenKey, token) {
+  try {
+    localStorage.setItem(tokenKey, token);
+    return true;
+  } catch (storageError) {
+    return false;
   }
 }
 
@@ -226,42 +221,20 @@ export async function syncEventData(eventData) {
   const requestUrl = `${APP_CONFIG.API_BASE_URL}/events/${encodeURIComponent(eventData.id)}`;
   const tokenPrefix = APP_CONFIG.STORAGE_KEYS?.OWNER_TOKEN_PREFIX || 'aura_owner_';
   const tokenKey = `${tokenPrefix}${eventData.id}`;
-  let token = null;
-  try {
-    token = localStorage.getItem(tokenKey);
-  } catch {
-    // Ignore private browsing storage restriction
-  }
+  const token = getOwnerToken(tokenKey);
 
   try {
-    const headers = {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    };
-    if (token) {
-      headers['x-event-token'] = token;
-    }
+    const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
+    if (token) headers['x-event-token'] = token;
 
-    const response = await fetch(requestUrl, {
-      method: 'PUT',
-      headers,
-      body: JSON.stringify(eventData)
-    });
-
+    const response = await fetch(requestUrl, { method: 'PUT', headers, body: JSON.stringify(eventData) });
     if (response.ok) {
       const resData = await response.json();
-      if (resData && resData.ownerToken) {
-        try {
-          localStorage.setItem(tokenKey, resData.ownerToken);
-        } catch {
-          // Ignore write failure
-        }
-      }
+      if (resData?.ownerToken) persistOwnerToken(tokenKey, resData.ownerToken);
       return true;
     }
     return false;
-  } catch {
+  } catch (networkError) {
     return false; // Retain local state quietly on sync interruption
   }
 }
-

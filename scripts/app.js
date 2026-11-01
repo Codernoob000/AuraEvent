@@ -1,14 +1,46 @@
 /**
  * @fileoverview Main Application Controller for AuraEvent Celebration Planner.
  * Coordinates state, active celebration views, tab navigation, and AI workflows.
- * Strictly adheres to single responsibility, zero console.log, and < 300 lines.
+ * Strictly adheres to single responsibility, zero console.log, and modular components.
  */
 
-import { loadPersistedEvents, saveEventsToStorage, getStoredActiveEventId, saveActiveEventId } from './events-data.js';
-import { renderMastheadMetrics, renderBudgetModule, renderTimelineRibbon, renderVendorModule, renderAIResults, renderSavedPlansModal, renderPlanPreviewModal } from './ui-renderers.js';
+import {
+  loadPersistedEvents,
+  saveEventsToStorage,
+  getStoredActiveEventId,
+  saveActiveEventId
+} from './events-data.js';
+
+import {
+  renderMastheadMetrics,
+  renderBudgetModule,
+  renderTimelineRibbon,
+  renderVendorModule,
+  renderAIResults,
+  renderSavedPlansModal,
+  renderPlanPreviewModal
+} from './ui-renderers.js';
+
 import { generateEventInspiration, syncEventData } from './api.js';
-import { setupModals, openModal, closeModals, openEditExpenseModal, openEditMilestoneModal, openEditVendorModal } from './modal-controller.js';
-import { generateUUID, calculateMilestoneDate, normalizeAIPlan, formatCurrency, calculateDetailedCountdown, renderCountdownDisplay, applyRecommendationsToCelebration } from './utils.js';
+
+import {
+  setupModals,
+  openModal,
+  closeModals,
+  openEditExpenseModal,
+  openEditMilestoneModal,
+  openEditVendorModal
+} from './modal-controller.js';
+
+import {
+  generateUUID,
+  normalizeAIPlan,
+  formatCurrency,
+  renderCountdownDisplay,
+  applyRecommendationsToCelebration
+} from './utils.js';
+
+import { APP_CONFIG } from './config.js';
 
 /** In-memory active application state */
 const APP_STATE = {
@@ -18,6 +50,8 @@ const APP_STATE = {
 
 let CURRENT_TIMELINE_PHASE = 'all';
 let COUNTDOWN_TICKER_INTERVAL = null;
+let CURRENT_GENERATED_PLAN = null;
+let PENDING_APPLY_CONTEXT = null;
 
 /**
  * Update real-time celebration countdown clock.
@@ -61,7 +95,9 @@ export function persistAndSync() {
   saveEventsToStorage(APP_STATE.events);
   const activeEvt = getActiveEvent();
   if (activeEvt) {
-    syncEventData(activeEvt).catch(() => {});
+    syncEventData(activeEvt).catch((syncError) => {
+      // Retain local state cleanly if remote sync is interrupted
+    });
   }
 }
 
@@ -82,18 +118,51 @@ function updateEventSelectorOptions() {
 }
 
 /**
+ * Update navigation tab badge counters.
+ * @param {Object} event - Active celebration.
+ */
+function updateBadgeCounters(event) {
+  const setBadge = (id, count) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = String(count);
+  };
+  setBadge('badge-budget-count', (event.expenses || []).length);
+  setBadge('badge-timeline-count', (event.milestones || []).length);
+  setBadge('badge-vendors-count', (event.vendors || []).length);
+}
+
+/**
+ * Update AI Workspace Active Celebration Header Banner.
+ * @param {Object} event - Active celebration.
+ */
+function updateWorkspaceHeader(event) {
+  const wsName = document.getElementById('ai-workspace-event-name');
+  const wsMeta = document.getElementById('ai-workspace-event-meta');
+  const savedCount = document.getElementById('saved-plans-count');
+  if (wsName) wsName.textContent = event.name;
+  if (wsMeta) wsMeta.textContent = `${event.type} · ${formatCurrency(event.budget, event.currency || 'USD')} · ${event.guestCount} guests`;
+  if (savedCount) savedCount.textContent = String((event.savedPlans || []).length);
+
+  const setInputValue = (id, val) => {
+    const el = document.getElementById(id);
+    if (el && val !== undefined) el.value = val;
+  };
+  setInputValue('ai-event-type', event.type);
+  setInputValue('ai-budget-input', event.budget);
+  setInputValue('ai-guest-count', event.guestCount);
+}
+
+/**
  * Refresh all UI modules for the active event.
  */
 export function refreshActiveView() {
   const event = getActiveEvent();
   if (!event) return;
 
-  // Personalize aesthetic theme based on celebration type
   if (typeof document !== 'undefined' && document.body) {
     document.body.setAttribute('data-event-type', event.type || 'Wedding');
   }
 
-  // Ensure live countdown ticker is running
   if (!COUNTDOWN_TICKER_INTERVAL && typeof window !== 'undefined') {
     COUNTDOWN_TICKER_INTERVAL = setInterval(updateCountdownTicker, 1000);
   }
@@ -103,29 +172,8 @@ export function refreshActiveView() {
   renderTimelineRibbon(event, handleToggleMilestone, handleDeleteMilestone, CURRENT_TIMELINE_PHASE, handleEditMilestone);
   renderVendorModule(event, handleDeleteVendor, handleUpdateVendorStatus, handleEditVendor, handleToggleChecklist, handleDeleteChecklist);
 
-  // Update counter badges
-  const bBudget = document.getElementById('badge-budget-count');
-  const bTimeline = document.getElementById('badge-timeline-count');
-  const bVendors = document.getElementById('badge-vendors-count');
-  if (bBudget) bBudget.textContent = String((event.expenses || []).length);
-  if (bTimeline) bTimeline.textContent = String((event.milestones || []).length);
-  if (bVendors) bVendors.textContent = String((event.vendors || []).length);
-
-  // Update AI Workspace Active Celebration Banner
-  const wsName = document.getElementById('ai-workspace-event-name');
-  const wsMeta = document.getElementById('ai-workspace-event-meta');
-  const savedCount = document.getElementById('saved-plans-count');
-  if (wsName) wsName.textContent = event.name;
-  if (wsMeta) wsMeta.textContent = `${event.type} · ${formatCurrency(event.budget, event.currency || 'USD')} · ${event.guestCount} guests`;
-  if (savedCount) savedCount.textContent = String((event.savedPlans || []).length);
-
-  // Pre-fill AI inputs with active celebration parameters
-  const aiType = document.getElementById('ai-event-type');
-  const aiBudget = document.getElementById('ai-budget-input');
-  const aiGuests = document.getElementById('ai-guest-count');
-  if (aiType && event.type) aiType.value = event.type;
-  if (aiBudget && event.budget) aiBudget.value = event.budget;
-  if (aiGuests && event.guestCount) aiGuests.value = event.guestCount;
+  updateBadgeCounters(event);
+  updateWorkspaceHeader(event);
 }
 
 /**
@@ -241,7 +289,7 @@ function handleDeleteVendor(vendorId) {
  */
 function handleUpdateVendorStatus(vendorId) {
   const event = getActiveEvent();
-  const stages = ['Researching', 'Quoted', 'Contract Sent', 'Confirmed'];
+  const stages = APP_CONFIG.VENDOR_STATUSES || ['Researching', 'Quoted', 'Contract Sent', 'Confirmed'];
   const ven = (event.vendors || []).find((v) => v.id === vendorId);
   if (ven) {
     const currentIndex = stages.indexOf(ven.status);
@@ -314,12 +362,6 @@ function bindTabJump(selector, tabId) {
 }
 
 /**
- * Configure AI brainstorming form submission.
- */
-let CURRENT_GENERATED_PLAN = null;
-let PENDING_APPLY_CONTEXT = null;
-
-/**
  * Handle loading a saved plan into the active Atelier view.
  * @param {Object} plan - Saved plan object.
  */
@@ -346,12 +388,10 @@ function handleDeleteSavedPlan(savedId) {
 }
 
 /**
- * Configure AI brainstorming form submission and interactive plan actions.
+ * Bind generation form submission to Google Gemini proxy.
+ * @param {HTMLFormElement} form - Generator form element.
  */
-function setupAIWorkshop() {
-  const form = document.getElementById('form-ai-generator');
-  if (!form) return;
-
+function bindAIGenerationForm(form) {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const activeEvt = getActiveEvent();
@@ -373,24 +413,19 @@ function setupAIWorkshop() {
       CURRENT_GENERATED_PLAN = normalizeAIPlan(results, activeEvt);
       renderAIResults(CURRENT_GENERATED_PLAN, activeEvt, (p) => { CURRENT_GENERATED_PLAN = p; });
       showToast('Gemini inspiration generated successfully!');
-    } catch {
+    } catch (err) {
       showToast('Unable to reach AI service. Showing offline suggestions.', 'error');
     } finally {
       shimmer?.classList.add('hidden');
       if (submitBtn) submitBtn.disabled = false;
     }
   });
+}
 
-  // Regenerate Plan
-  document.getElementById('btn-regenerate-ai-plan')?.addEventListener('click', () => {
-    if (typeof form.requestSubmit === 'function') {
-      form.requestSubmit();
-    } else {
-      form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-    }
-  });
-
-  // Save Plan
+/**
+ * Bind save and library view actions for AI plans.
+ */
+function bindPlanSaveAndLibrary() {
   document.getElementById('btn-save-ai-plan')?.addEventListener('click', () => {
     if (!CURRENT_GENERATED_PLAN) {
       showToast('No generated plan to save.', 'error');
@@ -411,63 +446,89 @@ function setupAIWorkshop() {
     showToast(`Plan "${themeTitle}" saved to celebration!`);
   });
 
-  // View Saved Plans
   document.getElementById('btn-view-saved-plans')?.addEventListener('click', () => {
     const activeEvt = getActiveEvent();
     renderSavedPlansModal(activeEvt, handleLoadSavedPlan, handleDeleteSavedPlan);
     openModal('modal-saved-plans');
   });
+}
 
-  // Apply Entire Plan Trigger
-  document.getElementById('btn-apply-entire-plan')?.addEventListener('click', () => {
-    if (!CURRENT_GENERATED_PLAN) {
-      showToast('Generate a plan first before applying.', 'error');
-      return;
+/**
+ * Open plan application preview dialog.
+ * @param {boolean} isEntire - Whether entire plan or selected only.
+ */
+function openPlanPreview(isEntire) {
+  if (!CURRENT_GENERATED_PLAN) {
+    showToast('Generate a plan first before applying.', 'error');
+    return;
+  }
+  const activeEvt = getActiveEvent();
+  PENDING_APPLY_CONTEXT = { isEntire };
+  renderPlanPreviewModal(activeEvt, CURRENT_GENERATED_PLAN, isEntire);
+  openModal('modal-apply-plan-preview');
+}
+
+/**
+ * Execute application of verified recommendations to celebration state.
+ */
+function executePlanApplication() {
+  const confirmChk = document.getElementById('chk-confirm-apply-plan');
+  if (confirmChk && !confirmChk.checked) {
+    showToast('Please check the confirmation box to proceed.', 'error');
+    return;
+  }
+  const activeEvt = getActiveEvent();
+  if (!activeEvt || !CURRENT_GENERATED_PLAN) return;
+
+  const isEntire = PENDING_APPLY_CONTEXT?.isEntire ?? true;
+  const candidates = renderPlanPreviewModal(activeEvt, CURRENT_GENERATED_PLAN, isEntire);
+  const { addedExpenses, addedMilestones, addedVendors } = applyRecommendationsToCelebration(activeEvt, candidates);
+
+  persistAndSync();
+  refreshActiveView();
+  closeModals();
+  showToast(`Applied to ${activeEvt.name}: +${addedExpenses} expenses, +${addedMilestones} milestones, +${addedVendors} vendors!`);
+}
+
+/**
+ * Bind plan preview triggers and application execution.
+ */
+function bindPlanApplyActions() {
+  document.getElementById('btn-apply-entire-plan')?.addEventListener('click', () => openPlanPreview(true));
+  document.getElementById('btn-apply-selected-plan')?.addEventListener('click', () => openPlanPreview(false));
+  document.getElementById('btn-confirm-apply-plan')?.addEventListener('click', executePlanApplication);
+}
+
+/**
+ * Bind save, load, and preview actions for AI Atelier plans.
+ * @param {HTMLFormElement} form - Generator form element.
+ */
+function bindAIPlanActions(form) {
+  document.getElementById('btn-regenerate-ai-plan')?.addEventListener('click', () => {
+    if (typeof form.requestSubmit === 'function') {
+      form.requestSubmit();
+    } else {
+      form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
     }
-    const activeEvt = getActiveEvent();
-    PENDING_APPLY_CONTEXT = { isEntire: true };
-    renderPlanPreviewModal(activeEvt, CURRENT_GENERATED_PLAN, true);
-    openModal('modal-apply-plan-preview');
   });
 
-  // Apply Selected Recommendations Trigger
-  document.getElementById('btn-apply-selected-plan')?.addEventListener('click', () => {
-    if (!CURRENT_GENERATED_PLAN) {
-      showToast('Generate a plan first before applying.', 'error');
-      return;
-    }
-    const activeEvt = getActiveEvent();
-    PENDING_APPLY_CONTEXT = { isEntire: false };
-    renderPlanPreviewModal(activeEvt, CURRENT_GENERATED_PLAN, false);
-    openModal('modal-apply-plan-preview');
-  });
+  bindPlanSaveAndLibrary();
+  bindPlanApplyActions();
 
-  // Confirm Apply in Preview Modal
-  document.getElementById('btn-confirm-apply-plan')?.addEventListener('click', () => {
-    const confirmChk = document.getElementById('chk-confirm-apply-plan');
-    if (confirmChk && !confirmChk.checked) {
-      showToast('Please check the confirmation box to proceed.', 'error');
-      return;
-    }
-    const activeEvt = getActiveEvent();
-    if (!activeEvt || !CURRENT_GENERATED_PLAN) return;
-
-    const isEntire = PENDING_APPLY_CONTEXT?.isEntire ?? true;
-    const candidates = renderPlanPreviewModal(activeEvt, CURRENT_GENERATED_PLAN, isEntire);
-
-    const { addedExpenses, addedMilestones, addedVendors } = applyRecommendationsToCelebration(activeEvt, candidates);
-
-    persistAndSync();
-    refreshActiveView();
-    closeModals();
-    showToast(`Applied to ${activeEvt.name}: +${addedExpenses} expenses, +${addedMilestones} milestones, +${addedVendors} vendors!`);
-  });
-
-  // Modal close handlers
   document.getElementById('btn-cancel-apply-plan')?.addEventListener('click', closeModals);
   document.getElementById('btn-close-apply-plan-modal')?.addEventListener('click', closeModals);
   document.getElementById('btn-close-saved-plans-modal')?.addEventListener('click', closeModals);
   document.getElementById('btn-close-saved-plans-bottom')?.addEventListener('click', closeModals);
+}
+
+/**
+ * Configure AI brainstorming form submission and interactive plan actions.
+ */
+function setupAIWorkshop() {
+  const form = document.getElementById('form-ai-generator');
+  if (!form) return;
+  bindAIGenerationForm(form);
+  bindAIPlanActions(form);
 }
 
 /**
@@ -481,6 +542,36 @@ function handleEventCreated(newEvt) {
   persistAndSync();
   updateEventSelectorOptions();
   refreshActiveView();
+}
+
+/**
+ * Handle URL search parameters for initial tab, event selection, and modal opening.
+ */
+function handleUrlDeepLinking() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const initialEvent = params.get('event');
+    if (initialEvent && APP_STATE.events.some((e) => e.id === initialEvent)) {
+      APP_STATE.activeId = initialEvent;
+      saveActiveEventId(APP_STATE.activeId);
+      const sel = document.getElementById('event-select-input');
+      if (sel) sel.value = initialEvent;
+      refreshActiveView();
+    }
+    const initialTab = params.get('tab') || window.location.hash.replace('#', '');
+    if (initialTab) {
+      const tabBtn = document.getElementById(`tab-${initialTab}`) || document.querySelector(`[aria-controls="panel-${initialTab}"]`);
+      if (tabBtn) tabBtn.click();
+    }
+    const initialModal = params.get('modal');
+    if (initialModal === 'new-event') {
+      const btnNew = document.getElementById('btn-new-event');
+      if (btnNew) btnNew.click();
+    }
+  } catch (deepLinkError) {
+    const errorMsg = deepLinkError instanceof Error ? deepLinkError.message : 'Invalid URL query parameters';
+    void errorMsg;
+  }
 }
 
 /**
@@ -510,30 +601,7 @@ function initializeApp() {
     showToast('Switched active celebration.');
   });
 
-  // URL Deep Linking support (tabs, events, modals)
-  try {
-    const params = new URLSearchParams(window.location.search);
-    const initialEvent = params.get('event');
-    if (initialEvent && APP_STATE.events.some((e) => e.id === initialEvent)) {
-      APP_STATE.activeId = initialEvent;
-      saveActiveEventId(APP_STATE.activeId);
-      const sel = document.getElementById('event-select-input');
-      if (sel) sel.value = initialEvent;
-      refreshActiveView();
-    }
-    const initialTab = params.get('tab') || window.location.hash.replace('#', '');
-    if (initialTab) {
-      const tabBtn = document.getElementById(`tab-${initialTab}`) || document.querySelector(`[aria-controls="panel-${initialTab}"]`);
-      if (tabBtn) tabBtn.click();
-    }
-    const initialModal = params.get('modal');
-    if (initialModal === 'new-event') {
-      const btnNew = document.getElementById('btn-new-event');
-      if (btnNew) btnNew.click();
-    }
-  } catch {
-    // Deep linking non-blocking enhancement
-  }
+  handleUrlDeepLinking();
 }
 
 if (document.readyState === 'loading') {

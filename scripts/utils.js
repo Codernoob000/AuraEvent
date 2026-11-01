@@ -1,9 +1,11 @@
 /**
- * @fileoverview Shared utility functions for formatting, sanitization, dates, and export.
+ * @fileoverview Shared utility functions for formatting, sanitization, dates, colors, and export.
  * Follows Single Responsibility Principle, WCAG 2.1 AA, and Security Constitution.
  */
 
 /* global DOMPurify */
+
+import { APP_CONFIG } from './config.js';
 
 /** Currency formatter instance for US Dollars */
 const CURRENCY_FORMATTER = new Intl.NumberFormat('en-US', {
@@ -28,6 +30,68 @@ const DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
   day: 'numeric',
   year: 'numeric'
 });
+
+/** Standard milliseconds per 24-hour day */
+const MS_PER_DAY = 86400000;
+const MS_PER_SECOND = 1000;
+const SECONDS_PER_MINUTE = 60;
+const MINUTES_PER_HOUR = 60;
+const HOURS_PER_DAY = 24;
+
+/** Comprehensive named CSS colors dictionary */
+const COLOR_NAME_MAP = Object.freeze({
+  // Compound names first for greedy matching
+  'dusty rose': '#DCAE96',
+  'blush pink': '#F472B6',
+  'champagne gold': '#F59E0B',
+  'sage green': '#52796F',
+  'emerald green': '#043927',
+  'midnight navy': '#0F172A',
+  'forest green': '#14532D',
+  'slate blue': '#475569',
+  'royal blue': '#1D4ED8',
+  'sky blue': '#38BDF8',
+  // Single-word names
+  burgundy: '#8B0000',
+  gold: '#FFD700',
+  terracotta: '#E67E22',
+  copper: '#B87333',
+  sage: '#52796F',
+  emerald: '#043927',
+  navy: '#1E3A8A',
+  rose: '#E11D48',
+  blush: '#FBCFE8',
+  champagne: '#FDE68A',
+  amber: '#D97706',
+  ivory: '#FAF8F5',
+  lavender: '#C084FC',
+  plum: '#701A75',
+  eucalyptus: '#4A7C59',
+  slate: '#475569',
+  bronze: '#92400E',
+  coral: '#FB7185',
+  olive: '#65A30D',
+  forest: '#14532D',
+  crimson: '#991B1B',
+  rust: '#C2410C',
+  ochre: '#CC7722',
+  charcoal: '#334155',
+  silver: '#94A3B8',
+  teal: '#0D9488',
+  peach: '#FDBA74',
+  mint: '#6EE7B7',
+  mauve: '#C084FC',
+  mustard: '#EAB308',
+  lilac: '#C4B5FD',
+  maroon: '#800000',
+  indigo: '#4338CA',
+  pearl: '#F8FAFC'
+});
+
+/** Pre-sorted color entries (longest keys first for substring matching) */
+const SORTED_COLOR_ENTRIES = Object.freeze(
+  Object.entries(COLOR_NAME_MAP).sort((a, b) => b[0].length - a[0].length)
+);
 
 /**
  * Format a numeric amount as currency (USD default, supports INR).
@@ -69,7 +133,6 @@ export function sanitizeHTML(dirtyInput) {
       ALLOWED_ATTR: ['class']
     });
   }
-  // Fallback: encode entities safely
   return dirtyInput
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -81,10 +144,10 @@ export function sanitizeHTML(dirtyInput) {
 /**
  * Create a debounced wrapper around a function.
  * @param {Function} callback - Function to execute after delay.
- * @param {number} delayMs - Delay in milliseconds.
+ * @param {number} [delayMs=250] - Delay in milliseconds.
  * @returns {Function} Debounced function.
  */
-export function debounce(callback, delayMs = 250) {
+export function debounce(callback, delayMs = APP_CONFIG.DEBOUNCE_DELAY_MS) {
   let timeoutId = null;
   return function debounced(...args) {
     if (timeoutId !== null) {
@@ -122,13 +185,13 @@ export function calculateDaysRemaining(targetDateISO) {
   const now = new Date();
   const target = new Date(targetDateISO);
   const diffTime = target.getTime() - now.getTime();
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return Math.ceil(diffTime / MS_PER_DAY);
 }
 
 /**
  * Calculate detailed countdown (days, hours, minutes, seconds) to an event date.
  * @param {string} targetDateISO - The event date in ISO format.
- * @returns {Object} Object with days, hours, minutes, seconds, isPast.
+ * @returns {{ days: number, hours: number, minutes: number, seconds: number, isPast: boolean }} Countdown values.
  */
 export function calculateDetailedCountdown(targetDateISO) {
   if (!targetDateISO) return { days: 0, hours: 0, minutes: 0, seconds: 0, isPast: false };
@@ -138,10 +201,12 @@ export function calculateDetailedCountdown(targetDateISO) {
   if (diff <= 0) {
     return { days: 0, hours: 0, minutes: 0, seconds: 0, isPast: true };
   }
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+  const msInHour = MS_PER_SECOND * SECONDS_PER_MINUTE * MINUTES_PER_HOUR;
+  const msInDay = msInHour * HOURS_PER_DAY;
+  const days = Math.floor(diff / msInDay);
+  const hours = Math.floor((diff % msInDay) / msInHour);
+  const minutes = Math.floor((diff % msInHour) / (MS_PER_SECOND * SECONDS_PER_MINUTE));
+  const seconds = Math.floor((diff % (MS_PER_SECOND * SECONDS_PER_MINUTE)) / MS_PER_SECOND);
   return { days, hours, minutes, seconds, isPast: false };
 }
 
@@ -159,7 +224,7 @@ function toGoogleCalendarDate(dateObj) {
  * @param {Object} options - Calendar milestone options.
  * @param {string} options.title - Milestone or event title.
  * @param {string} options.description - Detailed description.
- * @param {string} options.location - Venue location.
+ * @param {string} [options.location] - Venue location.
  * @param {string} options.startDateISO - Start date string.
  * @param {number} [options.durationHours=2] - Duration in hours.
  * @returns {string} Google Calendar Add URL.
@@ -167,7 +232,7 @@ function toGoogleCalendarDate(dateObj) {
 export function buildGoogleCalendarUrl(options) {
   const { title, description, location, startDateISO, durationHours = 2 } = options;
   const startDate = startDateISO ? new Date(startDateISO) : new Date();
-  const endDate = new Date(startDate.getTime() + durationHours * 3600 * 1000);
+  const endDate = new Date(startDate.getTime() + durationHours * 3600 * MS_PER_SECOND);
 
   const startFormatted = toGoogleCalendarDate(startDate);
   const endFormatted = toGoogleCalendarDate(endDate);
@@ -180,7 +245,7 @@ export function buildGoogleCalendarUrl(options) {
     location: location || ''
   });
 
-  return `https://calendar.google.com/calendar/render?${queryParams.toString()}`;
+  return `${APP_CONFIG.GOOGLE_CALENDAR_ENDPOINT}?${queryParams.toString()}`;
 }
 
 /**
@@ -201,7 +266,7 @@ export function generateICalendarPayload(eventData) {
   const milestones = Array.isArray(eventData.milestones) ? eventData.milestones : [];
   milestones.forEach((item) => {
     const itemDate = item.date ? new Date(item.date) : new Date();
-    const endDate = new Date(itemDate.getTime() + 3600 * 1000);
+    const endDate = new Date(itemDate.getTime() + 3600 * MS_PER_SECOND);
     lines.push(
       'BEGIN:VEVENT',
       `UID:${item.id || generateUUID()}@auraevent.app`,
@@ -223,7 +288,7 @@ export function generateICalendarPayload(eventData) {
  * Trigger download of text/data file in client browser.
  * @param {string} content - Text file content.
  * @param {string} fileName - Destination filename.
- * @param {string} mimeType - File MIME type.
+ * @param {string} [mimeType='text/plain'] - File MIME type.
  */
 export function triggerFileDownload(content, fileName, mimeType = 'text/plain') {
   const blob = new Blob([content], { type: mimeType });
@@ -237,96 +302,47 @@ export function triggerFileDownload(content, fileName, mimeType = 'text/plain') 
 }
 
 /**
+ * Extract raw color string from possible object wrappers.
+ * @param {string|Object|any} rawColor - Untrusted color input.
+ * @returns {string} Normalized string representation.
+ */
+function extractColorString(rawColor) {
+  if (typeof rawColor === 'object' && rawColor !== null) {
+    return rawColor.hex || rawColor.color || rawColor.value || rawColor.code || rawColor.name || '';
+  }
+  return typeof rawColor === 'string' ? rawColor : '';
+}
+
+/**
  * Safely resolves an untrusted color input into a valid CSS hex color.
- * Handles 6-digit hexes (#8B0000, #FFD700, #E67E22), hexes in descriptions (Emerald Green (#043927)),
- * named colors (Copper, Sage Green, Burgundy, Gold, Terracotta, Navy), hexes without hashes, and objects.
+ * Handles hexes, named colors, descriptions, and object inputs.
  * @param {string|Object|any} rawColor - Untrusted color input from LLM or template.
  * @param {number} [fallbackIndex=0] - Index for deterministically selecting fallback color.
  * @returns {string} Valid uppercase hex color starting with '#'.
  */
 export function resolveCssColor(rawColor, fallbackIndex = 0) {
-  const FALLBACK_PALETTE = ['#0F172A', '#92400E', '#065F46', '#B45309', '#D97706', '#475569'];
-  if (!rawColor) {
-    return FALLBACK_PALETTE[fallbackIndex % FALLBACK_PALETTE.length];
-  }
+  const fallbackList = APP_CONFIG.FALLBACK_PALETTES || ['#0F172A', '#92400E', '#065F46'];
+  const fallbackColor = fallbackList[fallbackIndex % fallbackList.length];
 
-  let str = rawColor;
-  if (typeof rawColor === 'object' && rawColor !== null) {
-    str = rawColor.hex || rawColor.color || rawColor.value || rawColor.code || rawColor.name || '';
-  }
+  const colorStr = extractColorString(rawColor).trim();
+  if (!colorStr) return fallbackColor;
 
-  if (typeof str !== 'string' || !str.trim()) {
-    return FALLBACK_PALETTE[fallbackIndex % FALLBACK_PALETTE.length];
-  }
-
-  str = str.trim();
-
-  // 1. Direct hex match with hash anywhere in string: e.g. "#8B0000", "Emerald Green (#043927)"
-  const hexMatch = str.match(/#([0-9a-fA-F]{3,8})\b/);
+  // 1. Direct hex match with hash: e.g. "#8B0000", "Emerald Green (#043927)"
+  const hexMatch = colorStr.match(/#([0-9a-fA-F]{3,8})\b/);
   if (hexMatch) return hexMatch[0].toUpperCase();
 
   // 2. 3-digit or 6-digit hex without hash: e.g. "8B0000", "FFD700"
-  if (/^[0-9a-fA-F]{6}$/.test(str) || /^[0-9a-fA-F]{3}$/.test(str)) {
-    return `#${str.toUpperCase()}`;
+  if (/^[0-9a-fA-F]{6}$/.test(colorStr) || /^[0-9a-fA-F]{3}$/.test(colorStr)) {
+    return `#${colorStr.toUpperCase()}`;
   }
 
-  // 3. Named colors dictionary (case-insensitive substring/equality matching)
-  const lower = str.toLowerCase();
-  const COLOR_NAME_MAP = {
-    // Compound names first
-    'dusty rose': '#DCAE96',
-    'blush pink': '#F472B6',
-    'champagne gold': '#F59E0B',
-    'sage green': '#52796F',
-    'emerald green': '#043927',
-    'midnight navy': '#0F172A',
-    'forest green': '#14532D',
-    'slate blue': '#475569',
-    'royal blue': '#1D4ED8',
-    'sky blue': '#38BDF8',
-    // Single-word names
-    burgundy: '#8B0000',
-    gold: '#FFD700',
-    terracotta: '#E67E22',
-    copper: '#B87333',
-    sage: '#52796F',
-    emerald: '#043927',
-    navy: '#1E3A8A',
-    rose: '#E11D48',
-    blush: '#FBCFE8',
-    champagne: '#FDE68A',
-    amber: '#D97706',
-    ivory: '#FAF8F5',
-    lavender: '#C084FC',
-    plum: '#701A75',
-    eucalyptus: '#4A7C59',
-    slate: '#475569',
-    bronze: '#92400E',
-    coral: '#FB7185',
-    olive: '#65A30D',
-    forest: '#14532D',
-    crimson: '#991B1B',
-    rust: '#C2410C',
-    ochre: '#CC7722',
-    charcoal: '#334155',
-    silver: '#94A3B8',
-    teal: '#0D9488',
-    peach: '#FDBA74',
-    mint: '#6EE7B7',
-    mauve: '#C084FC',
-    mustard: '#EAB308',
-    lilac: '#C4B5FD',
-    maroon: '#800000',
-    indigo: '#4338CA',
-    pearl: '#F8FAFC'
-  };
-
-  const entries = Object.entries(COLOR_NAME_MAP).sort((a, b) => b[0].length - a[0].length);
-  for (const [name, hex] of entries) {
+  // 3. Named colors dictionary matching
+  const lower = colorStr.toLowerCase();
+  for (const [name, hex] of SORTED_COLOR_ENTRIES) {
     if (lower.includes(name)) return hex;
   }
 
-  return FALLBACK_PALETTE[fallbackIndex % FALLBACK_PALETTE.length];
+  return fallbackColor;
 }
 
 /**
@@ -339,49 +355,51 @@ export function calculateMilestoneDate(eventDateISO, offsetDays = 0) {
   let baseDate = new Date();
   if (eventDateISO) {
     const parsed = new Date(eventDateISO);
-    if (!isNaN(parsed.getTime())) {
+    if (!Number.isNaN(parsed.getTime())) {
       baseDate = parsed;
     }
   }
-  const targetDate = new Date(baseDate.getTime() + (Number(offsetDays) || 0) * 86400000);
+  const targetDate = new Date(baseDate.getTime() + (Number(offsetDays) || 0) * MS_PER_DAY);
   return targetDate.toISOString().split('T')[0];
 }
 
 /**
- * Normalizes and validates Gemini AI plan results into an interactive, editable plan schema.
- * Resilient against partial returns, legacy formats, or malformed inputs.
- * @param {Object} rawPlan - Raw AI output.
- * @param {Object} activeEvent - Current celebration workspace context.
- * @returns {Object} Normalized plan structure with selectable items.
+ * Normalize aesthetic themes collection from AI output.
+ * @param {Array<Object>} [rawThemes] - Raw themes array.
+ * @param {string} [eventType='Celebration'] - Event type.
+ * @returns {Array<Object>} Normalized themes list.
  */
-export function normalizeAIPlan(rawPlan, activeEvent = {}) {
-  const plan = rawPlan && typeof rawPlan === 'object' ? rawPlan : {};
-  const eventBudget = Number(activeEvent.budget) || 20000;
-  const eventType = activeEvent.type || 'Celebration';
+function normalizeThemes(rawThemes, eventType = 'Celebration') {
+  if (Array.isArray(rawThemes) && rawThemes.length > 0) {
+    return rawThemes.map((t, idx) => ({
+      id: t.id || `theme-${idx + 1}`,
+      title: typeof t.title === 'string' ? t.title : `${eventType} Theme Concept`,
+      concept: typeof t.concept === 'string' ? t.concept : 'Curated celebration aesthetic and ambiance.',
+      decorPalette: Array.isArray(t.decorPalette) ? t.decorPalette : ['#0F172A', '#D97706', '#FAF8F5'],
+      budgetTip: typeof t.budgetTip === 'string' ? t.budgetTip : 'Optimize vendor contract terms to control costs.'
+    }));
+  }
+  return [
+    {
+      id: 'theme-1',
+      title: `${eventType} Atelier Elegance`,
+      concept: 'Refined architectural lighting, bespoke floral installations, and acoustic soundscapes.',
+      decorPalette: ['#0F172A', '#D97706', '#FAF8F5'],
+      budgetTip: 'Allocate 40% to catering and 20% to decor to maximize guest impact.'
+    }
+  ];
+}
 
-  // 1. Themes
-  const themes = Array.isArray(plan.themes) && plan.themes.length > 0
-    ? plan.themes.map((t, idx) => ({
-        id: t.id || `theme-${idx + 1}`,
-        title: typeof t.title === 'string' ? t.title : `${eventType} Theme Concept`,
-        concept: typeof t.concept === 'string' ? t.concept : 'Curated celebration aesthetic and ambiance.',
-        decorPalette: Array.isArray(t.decorPalette) ? t.decorPalette : ['#0F172A', '#D97706', '#FAF8F5'],
-        budgetTip: typeof t.budgetTip === 'string' ? t.budgetTip : 'Optimize vendor contract terms to control costs.'
-      }))
-    : [
-        {
-          id: 'theme-1',
-          title: `${eventType} Atelier Elegance`,
-          concept: 'Refined architectural lighting, bespoke floral installations, and acoustic soundscapes.',
-          decorPalette: ['#0F172A', '#D97706', '#FAF8F5'],
-          budgetTip: 'Allocate 40% to catering and 20% to decor to maximize guest impact.'
-        }
-      ];
-
-  // 2. Budget Allocations
-  let budgetAllocations = [];
-  if (Array.isArray(plan.budgetAllocations) && plan.budgetAllocations.length > 0) {
-    budgetAllocations = plan.budgetAllocations.map((b, idx) => ({
+/**
+ * Normalize budget allocations collection from AI output.
+ * @param {Array<Object>} [rawAllocations] - Raw allocations array.
+ * @param {number} [eventBudget=20000] - Celebration budget.
+ * @param {string} [eventType='Celebration'] - Celebration type.
+ * @returns {Array<Object>} Normalized allocations list.
+ */
+function normalizeBudgetAllocations(rawAllocations, eventBudget = 20000, eventType = 'Celebration') {
+  if (Array.isArray(rawAllocations) && rawAllocations.length > 0) {
+    return rawAllocations.map((b, idx) => ({
       id: b.id || `ai-budget-${idx + 1}`,
       category: b.category || 'Catering',
       item: b.item || `${eventType} Service Item`,
@@ -389,47 +407,24 @@ export function normalizeAIPlan(rawPlan, activeEvent = {}) {
       notes: b.notes || 'Allocated by Gemini AI Atelier',
       selected: true
     }));
-  } else {
-    budgetAllocations = [
-      {
-        id: 'ai-budget-1',
-        category: 'Catering',
-        item: `${eventType} Plated Dinner & Beverage`,
-        cost: Math.round(eventBudget * 0.40),
-        notes: 'Reception dinner service and table hospitality',
-        selected: true
-      },
-      {
-        id: 'ai-budget-2',
-        category: 'Decor',
-        item: 'Floral Installations & Ambient Lighting',
-        cost: Math.round(eventBudget * 0.20),
-        notes: 'Table runners, floral centerpieces, and uplighting',
-        selected: true
-      },
-      {
-        id: 'ai-budget-3',
-        category: 'Entertainment',
-        item: 'Live Performance & Audio Engineering',
-        cost: Math.round(eventBudget * 0.15),
-        notes: 'Sound equipment checkout and live performance',
-        selected: true
-      },
-      {
-        id: 'ai-budget-4',
-        category: 'Photography',
-        item: 'Fine Art Celebration Photography',
-        cost: Math.round(eventBudget * 0.15),
-        notes: 'Complete event documentary coverage',
-        selected: true
-      }
-    ];
   }
+  return [
+    { id: 'ai-budget-1', category: 'Catering', item: `${eventType} Plated Dinner & Beverage`, cost: Math.round(eventBudget * 0.40), notes: 'Reception dinner service and table hospitality', selected: true },
+    { id: 'ai-budget-2', category: 'Decor', item: 'Floral Installations & Ambient Lighting', cost: Math.round(eventBudget * 0.20), notes: 'Table runners, floral centerpieces, and uplighting', selected: true },
+    { id: 'ai-budget-3', category: 'Entertainment', item: 'Live Performance & Audio Engineering', cost: Math.round(eventBudget * 0.15), notes: 'Sound equipment checkout and live performance', selected: true },
+    { id: 'ai-budget-4', category: 'Photography', item: 'Fine Art Celebration Photography', cost: Math.round(eventBudget * 0.15), notes: 'Complete event documentary coverage', selected: true }
+  ];
+}
 
-  // 3. Suggested Milestones
-  let suggestedMilestones = [];
-  if (Array.isArray(plan.suggestedMilestones) && plan.suggestedMilestones.length > 0) {
-    suggestedMilestones = plan.suggestedMilestones.map((m, idx) => ({
+/**
+ * Normalize suggested milestones collection from AI output.
+ * @param {Array<Object>} [rawMilestones] - Raw suggested milestones.
+ * @param {Array<string>} [timelineRecs] - Raw timeline recommendations.
+ * @returns {Array<Object>} Normalized milestones list.
+ */
+function normalizeMilestones(rawMilestones, timelineRecs) {
+  if (Array.isArray(rawMilestones) && rawMilestones.length > 0) {
+    return rawMilestones.map((m, idx) => ({
       id: m.id || `ai-ms-${idx + 1}`,
       title: m.title || `Milestone Phase ${idx + 1}`,
       offsetDays: typeof m.offsetDays === 'number' ? m.offsetDays : (-60 + idx * 25),
@@ -437,8 +432,9 @@ export function normalizeAIPlan(rawPlan, activeEvent = {}) {
       notes: m.notes || 'Suggested by Gemini AI Atelier',
       selected: true
     }));
-  } else if (Array.isArray(plan.timelineRecommendation) && plan.timelineRecommendation.length > 0) {
-    suggestedMilestones = plan.timelineRecommendation.map((line, idx) => ({
+  }
+  if (Array.isArray(timelineRecs) && timelineRecs.length > 0) {
+    return timelineRecs.map((line, idx) => ({
       id: `ai-ms-${idx + 1}`,
       title: String(line).replace(/^[-*•\d.]+\s*/, '').slice(0, 80),
       offsetDays: idx === 0 ? -60 : idx === 1 ? -30 : idx === 2 ? -7 : 0,
@@ -446,82 +442,58 @@ export function normalizeAIPlan(rawPlan, activeEvent = {}) {
       notes: String(line),
       selected: true
     }));
-  } else {
-    suggestedMilestones = [
-      {
-        id: 'ai-ms-1',
-        title: 'Lock Venue & Catering Contracts',
-        offsetDays: -90,
-        phase: 'Planning',
-        notes: 'Confirm venue holds, security deposit, and dietary guidelines',
-        selected: true
-      },
-      {
-        id: 'ai-ms-2',
-        title: 'Finalize Decor, Florals & Layout',
-        offsetDays: -30,
-        phase: 'Preparation',
-        notes: 'Approve centerpiece proofs, table linens, and lighting schemes',
-        selected: true
-      },
-      {
-        id: 'ai-ms-3',
-        title: 'Vendor Load-In & Audio Sound Check',
-        offsetDays: -7,
-        phase: 'Execution',
-        notes: 'Verify electrical capacity and vendor arrival schedule',
-        selected: true
-      },
-      {
-        id: 'ai-ms-4',
-        title: 'Celebration Reception & Gala Toast',
-        offsetDays: 0,
-        phase: 'Day of',
-        notes: 'Execute run-of-show timeline, welcome speech, and toast',
-        selected: true
-      }
-    ];
   }
+  return [
+    { id: 'ai-ms-1', title: 'Lock Venue & Catering Contracts', offsetDays: -90, phase: 'Planning', notes: 'Confirm venue holds, security deposit, and dietary guidelines', selected: true },
+    { id: 'ai-ms-2', title: 'Finalize Decor, Florals & Layout', offsetDays: -30, phase: 'Preparation', notes: 'Approve centerpiece proofs, table linens, and lighting schemes', selected: true },
+    { id: 'ai-ms-3', title: 'Vendor Load-In & Audio Sound Check', offsetDays: -7, phase: 'Execution', notes: 'Verify electrical capacity and vendor arrival schedule', selected: true },
+    { id: 'ai-ms-4', title: 'Celebration Reception & Gala Toast', offsetDays: 0, phase: 'Day of', notes: 'Execute run-of-show timeline, welcome speech, and toast', selected: true }
+  ];
+}
 
-  // 4. Suggested Vendors
-  let suggestedVendors = [];
-  if (Array.isArray(plan.suggestedVendors) && plan.suggestedVendors.length > 0) {
-    suggestedVendors = plan.suggestedVendors.map((v, idx) => ({
+/**
+ * Normalize suggested vendor partners collection from AI output.
+ * @param {Array<Object>} [rawVendors] - Raw vendors array.
+ * @param {number} [eventBudget=20000] - Celebration budget.
+ * @param {string} [eventType='Celebration'] - Celebration type.
+ * @param {Array<string>} [vendorQuestions] - Vendor questions.
+ * @returns {Array<Object>} Normalized vendors list.
+ */
+function normalizeVendors(rawVendors, eventBudget = 20000, eventType = 'Celebration', vendorQuestions = []) {
+  if (Array.isArray(rawVendors) && rawVendors.length > 0) {
+    return rawVendors.map((v, idx) => ({
       id: v.id || `ai-ven-${idx + 1}`,
       category: v.category || 'Catering',
       name: v.name || `${eventType} Vendor Partner ${idx + 1}`,
       fee: Number(v.fee) > 0 ? Number(v.fee) : Math.round(eventBudget * 0.2),
-      notes: v.notes || (plan.vendorQuestions?.[idx] || 'Recommended by Gemini AI'),
+      notes: v.notes || (vendorQuestions[idx] || 'Recommended by Gemini AI'),
       selected: true
     }));
-  } else {
-    suggestedVendors = [
-      {
-        id: 'ai-ven-1',
-        category: 'Catering',
-        name: 'Artisan Culinary & Hospitality',
-        fee: Math.round(eventBudget * 0.40),
-        notes: plan.vendorQuestions?.[0] || 'Inquire: What setup/breakdown window is included in quote?',
-        selected: true
-      },
-      {
-        id: 'ai-ven-2',
-        category: 'Decor',
-        name: 'Lumière Floral & Event Styling',
-        fee: Math.round(eventBudget * 0.20),
-        notes: plan.vendorQuestions?.[1] || 'Inquire: Are strikes and delivery included in quote?',
-        selected: true
-      },
-      {
-        id: 'ai-ven-3',
-        category: 'Photography',
-        name: 'Aura Documentary Studio',
-        fee: Math.round(eventBudget * 0.15),
-        notes: plan.vendorQuestions?.[2] || 'Inquire: What is the delivery turnaround for high-res images?',
-        selected: true
-      }
-    ];
   }
+  return [
+    { id: 'ai-ven-1', category: 'Catering', name: 'Artisan Culinary & Hospitality', fee: Math.round(eventBudget * 0.40), notes: vendorQuestions[0] || 'Inquire: What setup/breakdown window is included in quote?', selected: true },
+    { id: 'ai-ven-2', category: 'Decor', name: 'Lumière Floral & Event Styling', fee: Math.round(eventBudget * 0.20), notes: vendorQuestions[1] || 'Inquire: Are strikes and delivery included in quote?', selected: true },
+    { id: 'ai-ven-3', category: 'Photography', name: 'Aura Documentary Studio', fee: Math.round(eventBudget * 0.15), notes: vendorQuestions[2] || 'Inquire: What is the delivery turnaround for high-res images?', selected: true }
+  ];
+}
+
+/**
+ * Normalizes and validates Gemini AI plan results into an interactive, editable plan schema.
+ * Resilient against partial returns, legacy formats, or malformed inputs.
+ * @param {Object} rawPlan - Raw AI output.
+ * @param {Object} [activeEvent={}] - Current celebration workspace context.
+ * @returns {Object} Normalized plan structure with selectable items.
+ */
+export function normalizeAIPlan(rawPlan, activeEvent = {}) {
+  const plan = rawPlan && typeof rawPlan === 'object' ? rawPlan : {};
+  const safeEvent = (activeEvent && typeof activeEvent === 'object') ? activeEvent : {};
+  const eventBudget = Number(safeEvent.budget) || APP_CONFIG.LIMITS.DEFAULT_BUDGET;
+  const eventType = safeEvent.type || 'Celebration';
+
+  const themes = normalizeThemes(plan.themes, eventType);
+  const budgetAllocations = normalizeBudgetAllocations(plan.budgetAllocations, eventBudget, eventType);
+  const suggestedMilestones = normalizeMilestones(plan.suggestedMilestones, plan.timelineRecommendation);
+  const suggestedVendors = normalizeVendors(plan.suggestedVendors, eventBudget, eventType, plan.vendorQuestions);
 
   return {
     id: plan.id || generateUUID(),
@@ -542,17 +514,18 @@ export function normalizeAIPlan(rawPlan, activeEvent = {}) {
  * Centralizes DOM countdown element updates across views.
  * @param {string|Date} targetDateISO - ISO target date string or Date object.
  * @param {Document|HTMLElement} [rootNode=document] - Root DOM document or container.
- * @returns {Object} Countdown calculation result object.
+ * @returns {{ days: number, hours: number, minutes: number, seconds: number, isPast: boolean }} Countdown result.
  */
 export function renderCountdownDisplay(targetDateISO, rootNode = (typeof document !== 'undefined' ? document : null)) {
   const countdown = calculateDetailedCountdown(targetDateISO);
   if (!rootNode) return countdown;
 
-  const cdDays = rootNode.getElementById ? rootNode.getElementById('countdown-days') : rootNode.querySelector?.('#countdown-days');
-  const cdHours = rootNode.getElementById ? rootNode.getElementById('countdown-hours') : rootNode.querySelector?.('#countdown-hours');
-  const cdMins = rootNode.getElementById ? rootNode.getElementById('countdown-mins') : rootNode.querySelector?.('#countdown-mins');
-  const cdSecs = rootNode.getElementById ? rootNode.getElementById('countdown-secs') : rootNode.querySelector?.('#countdown-secs');
-  const cdSummary = rootNode.getElementById ? rootNode.getElementById('hero-countdown-summary') : rootNode.querySelector?.('#hero-countdown-summary');
+  const findNode = (id) => (rootNode.getElementById ? rootNode.getElementById(id) : rootNode.querySelector?.(`#${id}`));
+  const cdDays = findNode('countdown-days');
+  const cdHours = findNode('countdown-hours');
+  const cdMins = findNode('countdown-mins');
+  const cdSecs = findNode('countdown-secs');
+  const cdSummary = findNode('hero-countdown-summary');
 
   if (cdDays) cdDays.textContent = String(countdown.days).padStart(2, '0');
   if (cdHours) cdHours.textContent = String(countdown.hours).padStart(2, '0');
@@ -570,6 +543,102 @@ export function renderCountdownDisplay(targetDateISO, rootNode = (typeof documen
   }
 
   return countdown;
+}
+
+/**
+ * Apply recommended expenses to celebration with de-duplication.
+ * @param {Object} celebration - Celebration state.
+ * @param {Array<Object>} candidates - List of candidate expenses.
+ * @param {Function} idGen - UUID generator function.
+ * @returns {number} Count of added items.
+ */
+function applyBudgetItems(celebration, candidates, idGen) {
+  const existingExpenses = new Set(
+    celebration.expenses.map((e) => (e.description || e.item || '').toLowerCase().trim()).filter(Boolean)
+  );
+  let count = 0;
+  candidates.forEach((item) => {
+    const itemDesc = (item.description || item.item || '').trim();
+    const descKey = itemDesc.toLowerCase();
+    if (descKey && !existingExpenses.has(descKey)) {
+      celebration.expenses.push({
+        id: idGen(),
+        category: item.category || 'General',
+        description: itemDesc,
+        estimated: Number(item.estimated || item.cost) || 0,
+        actual: Number(item.actual || item.cost) || 0,
+        status: item.status || 'Pending'
+      });
+      existingExpenses.add(descKey);
+      count++;
+    }
+  });
+  return count;
+}
+
+/**
+ * Apply recommended milestones to celebration with de-duplication and chronological sorting.
+ * @param {Object} celebration - Celebration state.
+ * @param {Array<Object>} candidates - List of candidate milestones.
+ * @param {Function} idGen - UUID generator.
+ * @param {Function} dateCalc - Date calculator.
+ * @returns {number} Count of added items.
+ */
+function applyMilestoneItems(celebration, candidates, idGen, dateCalc) {
+  const existingMilestones = new Set(
+    celebration.milestones.map((m) => (m.title || '').toLowerCase().trim()).filter(Boolean)
+  );
+  let count = 0;
+  candidates.forEach((m) => {
+    const title = (m.title || '').trim();
+    const titleKey = title.toLowerCase();
+    if (titleKey && !existingMilestones.has(titleKey)) {
+      const milestoneDate = m.date || dateCalc(celebration.date, m.offsetDays);
+      celebration.milestones.push({
+        id: idGen(),
+        title: title,
+        phase: m.phase || 'Planning',
+        date: milestoneDate,
+        notes: m.notes || 'Recommended by Gemini AI',
+        completed: Boolean(m.completed)
+      });
+      existingMilestones.add(titleKey);
+      count++;
+    }
+  });
+  celebration.milestones.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  return count;
+}
+
+/**
+ * Apply recommended vendor partners to celebration with de-duplication.
+ * @param {Object} celebration - Celebration state.
+ * @param {Array<Object>} candidates - List of candidate vendors.
+ * @param {Function} idGen - UUID generator.
+ * @returns {number} Count of added items.
+ */
+function applyVendorItems(celebration, candidates, idGen) {
+  const existingVendors = new Set(
+    celebration.vendors.map((v) => (v.name || '').toLowerCase().trim()).filter(Boolean)
+  );
+  let count = 0;
+  candidates.forEach((v) => {
+    const name = (v.name || '').trim();
+    const nameKey = name.toLowerCase();
+    if (nameKey && !existingVendors.has(nameKey)) {
+      celebration.vendors.push({
+        id: idGen(),
+        category: v.category || 'General',
+        name: name,
+        contact: v.contact || 'Pending outreach',
+        fee: Number(v.fee) || 0,
+        status: v.status || 'Quoted'
+      });
+      existingVendors.add(nameKey);
+      count++;
+    }
+  });
+  return count;
 }
 
 /**
@@ -600,78 +669,13 @@ export function applyRecommendationsToCelebration(celebration, candidates = {}, 
   celebration.milestones = Array.isArray(celebration.milestones) ? celebration.milestones : [];
   celebration.vendors = Array.isArray(celebration.vendors) ? celebration.vendors : [];
 
-  // 1. Budget & Expenses
   const budgetList = candidates.expensesToAdd || candidates.budgetAllocations || [];
-  const existingExpenses = new Set(
-    celebration.expenses.map((e) => (e.description || e.item || '').toLowerCase().trim()).filter(Boolean)
-  );
-  let addedExpenses = 0;
-  budgetList.forEach((item) => {
-    const itemDesc = (item.description || item.item || '').trim();
-    const descKey = itemDesc.toLowerCase();
-    if (descKey && !existingExpenses.has(descKey)) {
-      celebration.expenses.push({
-        id: idGen(),
-        category: item.category || 'General',
-        description: itemDesc,
-        estimated: Number(item.estimated || item.cost) || 0,
-        actual: Number(item.actual || item.cost) || 0,
-        status: item.status || 'Pending'
-      });
-      existingExpenses.add(descKey);
-      addedExpenses++;
-    }
-  });
-
-  // 2. Timeline Milestones
   const milestoneList = candidates.milestonesToAdd || candidates.suggestedMilestones || [];
-  const existingMilestones = new Set(
-    celebration.milestones.map((m) => (m.title || '').toLowerCase().trim()).filter(Boolean)
-  );
-  let addedMilestones = 0;
-  milestoneList.forEach((m) => {
-    const title = (m.title || '').trim();
-    const titleKey = title.toLowerCase();
-    if (titleKey && !existingMilestones.has(titleKey)) {
-      const milestoneDate = m.date || dateCalc(celebration.date, m.offsetDays);
-      celebration.milestones.push({
-        id: idGen(),
-        title: title,
-        phase: m.phase || 'Planning',
-        date: milestoneDate,
-        notes: m.notes || 'Recommended by Gemini AI',
-        completed: Boolean(m.completed)
-      });
-      existingMilestones.add(titleKey);
-      addedMilestones++;
-    }
-  });
-  celebration.milestones.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-  // 3. Vendors
   const vendorList = candidates.vendorsToAdd || candidates.suggestedVendors || [];
-  const existingVendors = new Set(
-    celebration.vendors.map((v) => (v.name || '').toLowerCase().trim()).filter(Boolean)
-  );
-  let addedVendors = 0;
-  vendorList.forEach((v) => {
-    const name = (v.name || '').trim();
-    const nameKey = name.toLowerCase();
-    if (nameKey && !existingVendors.has(nameKey)) {
-      celebration.vendors.push({
-        id: idGen(),
-        category: v.category || 'General',
-        name: name,
-        contact: v.contact || 'Pending outreach',
-        fee: Number(v.fee) || 0,
-        status: v.status || 'Quoted'
-      });
-      existingVendors.add(nameKey);
-      addedVendors++;
-    }
-  });
+
+  const addedExpenses = applyBudgetItems(celebration, budgetList, idGen);
+  const addedMilestones = applyMilestoneItems(celebration, milestoneList, idGen, dateCalc);
+  const addedVendors = applyVendorItems(celebration, vendorList, idGen);
 
   return { addedExpenses, addedMilestones, addedVendors };
 }
-
-

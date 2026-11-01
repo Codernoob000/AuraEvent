@@ -6,10 +6,37 @@
 
 /** Token usage registry tracked per IP/user identifier with rolling window */
 const USER_TOKEN_REGISTRY = new Map();
-const TOKEN_WINDOW_MS = 60 * 60 * 1000; // 1-hour rolling budget window
+
+/** 1-hour rolling budget window in milliseconds */
+const TOKEN_WINDOW_MS = 60 * 60 * 1000;
+
+/** Default estimated tokens per request */
+const DEFAULT_ESTIMATED_TOKENS = 400;
 
 /** Maximum allowed token consumption per user session */
 const MAX_USER_TOKEN_BUDGET = Number(process.env.MAX_USER_TOKEN_BUDGET) || 10000;
+
+/** Default Google Gemini Model identifier */
+const DEFAULT_GEMINI_MODEL = 'gemini-3.8-flash';
+
+/** Ordered live fallback chain for resilient degradation */
+const COMPATIBLE_LIVE_FALLBACKS = Object.freeze(['gemini-3.6-flash', 'gemini-3-flash-preview']);
+
+/** Gemini API HTTP request timeout in milliseconds */
+const REQUEST_TIMEOUT_MS = 35000;
+
+/** Gemini generation configuration parameters */
+const GENERATION_CONFIG = Object.freeze({
+  temperature: 0.7,
+  maxOutputTokens: 1500,
+  responseMimeType: 'application/json'
+});
+
+/** Maximum allowed characters for sanitized theme prompt */
+const MAX_PROMPT_LENGTH = 300;
+
+/** Maximum allowed characters for user identifier */
+const MAX_USER_ID_LENGTH = 80;
 
 /**
  * Sanitize user prompt to prevent prompt injection attacks.
@@ -26,21 +53,21 @@ export function sanitizePromptInput(rawPrompt) {
     .replace(/user:/gi, '')
     .replace(/ignore previous instructions/gi, '')
     .trim()
-    .slice(0, 300);
+    .slice(0, MAX_PROMPT_LENGTH);
 }
 
 /**
  * Track and verify token consumption against per-user budget.
  * Enforces sliding 1-hour quota and prevents runaway cost exhaustion (Rule 13).
  * @param {string} userIdentifier - IP address or session ID.
- * @param {number} estimatedTokens - Estimated token cost.
+ * @param {number} [estimatedTokens=400] - Estimated token cost.
  * @returns {boolean} True if within budget, false if exceeded.
  */
-export function checkAndUpdateTokenBudget(userIdentifier, estimatedTokens = 400) {
+export function checkAndUpdateTokenBudget(userIdentifier, estimatedTokens = DEFAULT_ESTIMATED_TOKENS) {
   const safeId = (typeof userIdentifier === 'string' && userIdentifier.trim())
-    ? userIdentifier.trim().slice(0, 80)
+    ? userIdentifier.trim().slice(0, MAX_USER_ID_LENGTH)
     : 'anonymous-client';
-  const safeTokens = Math.max(1, Number(estimatedTokens) || 400);
+  const safeTokens = Math.max(1, Number(estimatedTokens) || DEFAULT_ESTIMATED_TOKENS);
   const now = Date.now();
   const record = USER_TOKEN_REGISTRY.get(safeId);
 
@@ -60,6 +87,11 @@ export function checkAndUpdateTokenBudget(userIdentifier, estimatedTokens = 400)
 /**
  * Build system prompt instructing Google Gemini to generate structured event inspiration.
  * @param {Object} params - Event parameters.
+ * @param {string} params.eventType - Celebration type.
+ * @param {string} params.theme - Sanitized theme prompt.
+ * @param {string} [params.vibe] - Desired atmosphere.
+ * @param {number} params.budget - Budget amount.
+ * @param {number} params.guestCount - Guest headcount.
  * @returns {string} Complete formatted prompt.
  */
 function buildGeminiPrompt(params) {
@@ -161,10 +193,74 @@ Respond ONLY with a valid JSON object matching this exact schema:
 }`;
 }
 
-/** Default Google Gemini Model ID */
-const DEFAULT_GEMINI_MODEL = 'gemini-3.8-flash';
-/** Ordered live fallback chain per user specification */
-const COMPATIBLE_LIVE_FALLBACKS = ['gemini-3.6-flash', 'gemini-3-flash-preview'];
+/**
+ * Dispatch HTTP request to a specific Gemini model endpoint with timeout and safe error logging.
+ * Never logs or exposes raw API keys.
+ * @param {string} modelId - Model ID (e.g. 'gemini-3.8-flash').
+ * @param {Object} requestBody - Google Gemini API payload.
+ * @param {string} apiKey - Server-side Gemini API key.
+ * @param {string} primaryModel - Name of primary configured model.
+ * @returns {Promise<{ ok: boolean, data?: Object, status: number }>} Dispatch result.
+ */
+async function dispatchGeminiRequest(modelId, requestBody, apiKey, primaryModel) {
+  try {
+    process.stdout.write(`[GEMINI] Calling model endpoint: ${modelId}\n`);
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelId)}:generateContent?key=${encodeURIComponent(apiKey)}`;
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(requestBody),
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
+    });
+
+    if (!response.ok) {
+      process.stderr.write(`[GEMINI] ${modelId} returned HTTP ${response.status}. Attempting fallback...\n`);
+      return { ok: false, status: response.status };
+    }
+
+    const json = await response.json();
+    const rawText = json?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!rawText) {
+      process.stderr.write(`[GEMINI] ${modelId} returned empty response content.\n`);
+      return { ok: false, status: 200 };
+    }
+
+    const parsedData = JSON.parse(rawText);
+    const isFallback = modelId !== primaryModel;
+    process.stdout.write(`[GEMINI] Success: Response generated by ${modelId} (fallback: ${isFallback ? 'YES' : 'NO'})\n`);
+    return {
+      ok: true,
+      data: {
+        ...parsedData,
+        isFallback: false,
+        modelUsed: modelId,
+        fallbackTriggered: isFallback
+      },
+      status: 200
+    };
+  } catch (err) {
+    const errorMsg = err instanceof Error ? err.message : 'Unknown network failure';
+    process.stderr.write(`[GEMINI] ${modelId} error: ${errorMsg}. Attempting fallback...\n`);
+    return { ok: false, status: 0 };
+  }
+}
+
+/**
+ * Attempt generation across ordered model candidate list.
+ * @param {Array<string>} models - Ordered list of model names.
+ * @param {Object} requestBody - Google Gemini API payload.
+ * @param {string} apiKey - API key.
+ * @param {string} primaryModel - Primary model name.
+ * @returns {Promise<Object|null>} Generated data or null.
+ */
+async function tryLiveModels(models, requestBody, apiKey, primaryModel) {
+  for (const model of models) {
+    const res = await dispatchGeminiRequest(model, requestBody, apiKey, primaryModel);
+    if (res.ok) return res.data;
+  }
+  return null;
+}
 
 /**
  * Query the Google Gemini API with model configurability and resilient degradation.
@@ -185,77 +281,19 @@ export async function queryGeminiApi(params) {
   const promptText = buildGeminiPrompt({ ...params, theme: sanitizedTheme });
   const requestBody = {
     contents: [{ parts: [{ text: promptText }] }],
-    generationConfig: {
-      temperature: 0.7,
-      maxOutputTokens: 1500,
-      responseMimeType: 'application/json'
-    }
-  };
-
-  /** Helper to dispatch generation request with timeout and safe logging */
-  const dispatchModelRequest = async (modelId) => {
-    try {
-      process.stdout.write(`[GEMINI] Calling model endpoint: ${modelId}\n`);
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelId)}:generateContent?key=${encodeURIComponent(apiKey)}`;
-      
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody),
-        signal: AbortSignal.timeout(35000)
-      });
-
-      if (!response.ok) {
-        process.stderr.write(`[GEMINI] ${modelId} returned HTTP ${response.status}. Attempting fallback...\n`);
-        return { ok: false, status: response.status };
-      }
-
-      const json = await response.json();
-      const rawText = json?.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!rawText) {
-        process.stderr.write(`[GEMINI] ${modelId} returned empty response content.\n`);
-        return { ok: false, status: 200 };
-      }
-
-      const parsedData = JSON.parse(rawText);
-      const isFallback = modelId !== primaryModel;
-      process.stdout.write(`[GEMINI] Success: Response generated by ${modelId} (fallback: ${isFallback ? 'YES' : 'NO'})\n`);
-      return {
-        ok: true,
-        data: {
-          ...parsedData,
-          isFallback: false,
-          modelUsed: modelId,
-          fallbackTriggered: isFallback
-        }
-      };
-    } catch (err) {
-      process.stderr.write(`[GEMINI] ${modelId} error: ${err.message}. Attempting fallback...\n`);
-      return { ok: false, status: 0 };
-    }
+    generationConfig: GENERATION_CONFIG
   };
 
   try {
-    // 1. Primary Model: gemini-3.8-flash
-    const primaryResult = await dispatchModelRequest(primaryModel);
-    if (primaryResult.ok) {
-      return primaryResult.data;
-    }
+    const candidateModels = [primaryModel, ...COMPATIBLE_LIVE_FALLBACKS.filter((m) => m !== primaryModel)];
+    const liveResult = await tryLiveModels(candidateModels, requestBody, apiKey, primaryModel);
+    if (liveResult) return liveResult;
 
-    // 2. Fallback Chain: gemini-3.6-flash, then gemini-3-flash-preview
-    for (const fallbackModel of COMPATIBLE_LIVE_FALLBACKS) {
-      if (fallbackModel !== primaryModel) {
-        const fallbackResult = await dispatchModelRequest(fallbackModel);
-        if (fallbackResult.ok) {
-          return fallbackResult.data;
-        }
-      }
-    }
-
-    // 3. Final Option: Curated Offline Fallback
     process.stderr.write('[GEMINI] All live models exhausted. Activating curated offline engine.\n');
     return getCuratedOfflinePlan(params);
-  } catch {
+  } catch (unexpectedError) {
+    const msg = unexpectedError instanceof Error ? unexpectedError.message : 'Unknown exception';
+    process.stderr.write(`[GEMINI] Unexpected query error: ${msg}. Falling back to curated engine.\n`);
     return getCuratedOfflinePlan(params);
   }
 }
@@ -371,4 +409,3 @@ export function getCuratedOfflinePlan(params) {
     ]
   };
 }
-

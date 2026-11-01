@@ -26,6 +26,21 @@ const HOST = process.env.HOST || '0.0.0.0';
 const IS_PROD = process.env.NODE_ENV === 'production';
 
 /* ==========================================================================
+   Server Operational Constants
+   ========================================================================== */
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const GENERAL_RATE_LIMIT = 60;
+const AI_RATE_LIMIT = 10;
+const MUTATE_RATE_LIMIT = 15;
+const RETRY_AFTER_SECONDS = '60';
+const MAX_JSON_PAYLOAD_SIZE = '1mb';
+const MAX_BUDGET_CEILING = 10000000;
+const MAX_GUEST_CAPACITY = 50000;
+const MIN_OWNER_TOKEN_LENGTH = 16;
+const ESTIMATED_AI_TOKENS = 400;
+const SERVER_KEEP_ALIVE_MS = 1000 * 60 * 60;
+
+/* ==========================================================================
    1. Security Headers (Rule 7)
    ========================================================================== */
 app.use(helmet({
@@ -70,60 +85,71 @@ const allowedOrigins = [
   ...configuredOrigins
 ].filter(Boolean);
 
+/**
+ * Validate incoming request origin against allowed hostnames.
+ * @param {string|undefined} origin - Incoming Origin header.
+ * @param {Function} callback - CORS evaluation callback.
+ */
+function validateCorsOrigin(origin, callback) {
+  // Permit requests without Origin header (e.g. same-origin GET, curl, server-to-server)
+  if (!origin) {
+    return callback(null, true);
+  }
+  // Permit explicitly configured allowed origins
+  if (allowedOrigins.includes(origin)) {
+    return callback(null, true);
+  }
+  // Permit Render cloud subdomains (*.onrender.com) for zero-config Render web services
+  if (/^https:\/\/[a-z0-9-]+\.onrender\.com$/i.test(origin)) {
+    return callback(null, true);
+  }
+  // Permit local loopback origins on any port for development and testing
+  if (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin)) {
+    return callback(null, true);
+  }
+  return callback(new Error('CORS policy: Origin not allowed.'));
+}
+
 app.use(cors({
-  origin: (origin, callback) => {
-    // Permit requests without Origin header (e.g., same-origin GET, curl, server-to-server)
-    if (!origin) {
-      return callback(null, true);
-    }
-    // Permit explicitly configured allowed origins
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    // Permit Render cloud subdomains (*.onrender.com) for zero-config Render web services
-    if (/^https:\/\/[a-z0-9-]+\.onrender\.com$/i.test(origin)) {
-      return callback(null, true);
-    }
-    // Permit local loopback origins on any port for development and testing
-    if (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin)) {
-      return callback(null, true);
-    }
-    return callback(new Error('CORS policy: Origin not allowed.'));
-  },
+  origin: validateCorsOrigin,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true
 }));
 
-app.use(express.json({ limit: '1mb' }));
+app.use(express.json({ limit: MAX_JSON_PAYLOAD_SIZE }));
 
 /* ==========================================================================
-   3. Rate Limiting per Endpoint Type (Rule 2)
+   4. Rate Limiting per Endpoint Type (Rule 2)
    ========================================================================== */
-/** Standard rate limit response generator */
+/**
+ * Create standard rate limit error handler.
+ * @param {string} message - User-facing rate limit explanation.
+ * @returns {Function} Express middleware callback.
+ */
 const createRateLimitHandler = (message) => (req, res) => {
-  res.setHeader('Retry-After', '60');
+  res.setHeader('Retry-After', RETRY_AFTER_SECONDS);
   res.status(429).json({ error: message });
 };
 
 const generalLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 60,
+  windowMs: RATE_LIMIT_WINDOW_MS,
+  max: GENERAL_RATE_LIMIT,
   standardHeaders: true,
   legacyHeaders: false,
   handler: createRateLimitHandler('General API limit reached (60 requests/min). Please retry shortly.')
 });
 
 const aiLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 10,
+  windowMs: RATE_LIMIT_WINDOW_MS,
+  max: AI_RATE_LIMIT,
   standardHeaders: true,
   legacyHeaders: false,
   handler: createRateLimitHandler('AI inspiration request limit reached (10 requests/min). Please wait 60 seconds.')
 });
 
 const mutateLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 15,
+  windowMs: RATE_LIMIT_WINDOW_MS,
+  max: MUTATE_RATE_LIMIT,
   standardHeaders: true,
   legacyHeaders: false,
   handler: createRateLimitHandler('Data update limit reached. Please wait a moment before saving again.')
@@ -132,25 +158,27 @@ const mutateLimiter = rateLimit({
 app.use('/api/', generalLimiter);
 
 /* ==========================================================================
-   4. In-Memory Store & Schemas (Rules 3 & 5)
+   5. In-Memory Store & Schemas (Rules 3 & 5)
    ========================================================================== */
 const IN_MEMORY_DB = new Map();
 
+/** Schema for validating AI inspiration generation requests */
 const aiRequestSchema = z.object({
   eventType: z.enum(['Wedding', 'Birthday', 'Community Event', 'Anniversary', 'Gala', 'Corporate']),
   theme: z.string().min(1).max(120).trim(),
   vibe: z.string().max(80).trim().optional(),
-  budget: z.number().positive().max(10000000),
-  guestCount: z.number().int().positive().max(50000)
+  budget: z.number().positive().max(MAX_BUDGET_CEILING),
+  guestCount: z.number().int().positive().max(MAX_GUEST_CAPACITY)
 });
 
+/** Schema for validating celebration state synchronization */
 const eventSyncSchema = z.object({
   id: z.string().min(1).max(100),
   name: z.string().min(1).max(120).trim(),
   type: z.string().min(1).max(50).trim(),
   date: z.string().min(1).max(40),
-  budget: z.number().min(0).max(10000000),
-  guestCount: z.number().int().min(1).max(50000),
+  budget: z.number().min(0).max(MAX_BUDGET_CEILING),
+  guestCount: z.number().int().min(1).max(MAX_GUEST_CAPACITY),
   expenses: z.array(z.any()).optional(),
   milestones: z.array(z.any()).optional(),
   vendors: z.array(z.any()).optional(),
@@ -158,7 +186,7 @@ const eventSyncSchema = z.object({
 });
 
 /* ==========================================================================
-   5. Application Endpoints
+   6. Application Endpoints
    ========================================================================== */
 
 /** Silently respond to browser favicon probes */
@@ -183,7 +211,7 @@ app.post('/api/ai/ideas', aiLimiter, async (req, res, next) => {
     }
 
     const clientIdentifier = req.ip || 'anonymous-user';
-    const hasQuota = checkAndUpdateTokenBudget(clientIdentifier, 400);
+    const hasQuota = checkAndUpdateTokenBudget(clientIdentifier, ESTIMATED_AI_TOKENS);
     if (!hasQuota) {
       return res.status(429).json({ error: 'Per-user AI token budget exceeded for this session.' });
     }
@@ -232,7 +260,7 @@ app.put('/api/events/:id', mutateLimiter, (req, res, next) => {
     }
 
     // New event: assign persistent cryptographic ownership token
-    const ownerToken = (typeof clientToken === 'string' && clientToken.length >= 16)
+    const ownerToken = (typeof clientToken === 'string' && clientToken.length >= MIN_OWNER_TOKEN_LENGTH)
       ? clientToken
       : crypto.randomUUID();
 
@@ -250,10 +278,9 @@ app.put('/api/events/:id', mutateLimiter, (req, res, next) => {
 });
 
 /* ==========================================================================
-   6. Central Error Handling Middleware (Rule 9)
+   7. Central Error Handling Middleware (Rule 9)
    ========================================================================== */
 app.use((err, req, res, _next) => {
-  // Server-side audit log with sanitized details (never leaked to client)
   if (!IS_PROD) {
     process.stderr.write(`[ERROR] ${new Date().toISOString()} ${req.method} ${req.url}: ${err.message}\n`);
   }
@@ -261,7 +288,7 @@ app.use((err, req, res, _next) => {
 });
 
 /* ==========================================================================
-   7. Start Server
+   8. Start Server
    ========================================================================== */
 const isMainModule = process.argv[1] && (
   path.resolve(process.argv[1]).toLowerCase() === fileURLToPath(import.meta.url).toLowerCase() ||
@@ -272,10 +299,9 @@ if (isMainModule) {
     process.stdout.write(`AuraEvent Server running securely on http://${HOST}:${PORT} (NODE_ENV=${process.env.NODE_ENV || 'development'})\n`);
   });
   // Ensure Node event loop retains active reference on non-interactive Windows shells
-  const keepAlive = setInterval(() => {}, 1000 * 60 * 60);
+  const keepAlive = setInterval(() => {}, SERVER_KEEP_ALIVE_MS);
   process.on('SIGTERM', () => { clearInterval(keepAlive); server.close(); });
   process.on('SIGINT', () => { clearInterval(keepAlive); server.close(); });
 }
 
 export default app;
-

@@ -5,6 +5,7 @@
  */
 
 import { generateUUID, generateICalendarPayload, triggerFileDownload } from './utils.js';
+import { APP_CONFIG } from './config.js';
 
 /**
  * Open a specific modal dialog by ID and shift focus to first interactive field.
@@ -87,44 +88,40 @@ export function openEditVendorModal(vendor) {
 }
 
 /**
- * Configure modal open/close triggers and keyboard accessibility.
- * @param {Object} context - Application callbacks and state accessors.
+ * Bind modal open triggers across navigation and quick action buttons.
+ * @param {Function} getActiveEvent - Function returning active celebration.
  */
-export function setupModals(context) {
-  const { getActiveEvent, persistAndSync, refreshActiveView, showToast, onEventCreated } = context;
-
+function bindModalOpenTriggers(getActiveEvent) {
   document.getElementById('btn-add-expense-modal')?.addEventListener('click', () => openModal('modal-expense'));
   document.getElementById('btn-add-milestone-modal')?.addEventListener('click', () => openModal('modal-milestone'));
   document.getElementById('btn-add-vendor-modal')?.addEventListener('click', () => openModal('modal-vendor'));
   document.getElementById('btn-new-event')?.addEventListener('click', () => openModal('modal-new-event'));
   document.getElementById('btn-open-sync')?.addEventListener('click', () => openModal('modal-sync'));
 
-  // Readiness Center Quick Actions
+  // Quick action buttons in Readiness Center
   document.getElementById('btn-readiness-add-ms')?.addEventListener('click', () => openModal('modal-milestone'));
   document.getElementById('btn-readiness-add-exp')?.addEventListener('click', () => openModal('modal-expense'));
 
-  // Edit Active Celebration Action
+  // Hero Celebration Edit Button
   document.getElementById('btn-hero-edit-event')?.addEventListener('click', () => {
     const event = getActiveEvent();
     if (!event) return;
-    const nameEl = document.getElementById('edit-evt-name');
-    if (nameEl) nameEl.value = event.name || '';
-    const typeEl = document.getElementById('edit-evt-type');
-    if (typeEl) typeEl.value = event.type || 'Wedding';
-    const currEl = document.getElementById('edit-evt-currency');
-    if (currEl) currEl.value = event.currency || 'USD';
-    const dateEl = document.getElementById('edit-evt-date');
-    if (dateEl) dateEl.value = event.date || '';
-    const budEl = document.getElementById('edit-evt-budget');
-    if (budEl) budEl.value = event.budget || 10000;
-    const gstEl = document.getElementById('edit-evt-guests');
-    if (gstEl) gstEl.value = event.guestCount || 50;
-    const notesEl = document.getElementById('edit-evt-theme-notes');
-    if (notesEl) notesEl.value = event.themeNotes || '';
+    const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+    setVal('edit-evt-name', event.name || '');
+    setVal('edit-evt-type', event.type || 'Wedding');
+    setVal('edit-evt-currency', event.currency || 'USD');
+    setVal('edit-evt-date', event.date || '');
+    setVal('edit-evt-budget', event.budget || APP_CONFIG.LIMITS.DEFAULT_BUDGET);
+    setVal('edit-evt-guests', event.guestCount || APP_CONFIG.LIMITS.DEFAULT_GUESTS);
+    setVal('edit-evt-theme-notes', event.themeNotes || '');
     openModal('modal-edit-event');
   });
+}
 
-  // Interactive Visual Event Type Selection Cards in New Celebration Modal
+/**
+ * Bind interactive celebration type selection cards in New Celebration modal.
+ */
+function bindEventTypeSelection() {
   const typeCards = document.querySelectorAll('.event-type-card');
   const typeSelect = document.getElementById('evt-type');
   typeCards.forEach((card) => {
@@ -147,12 +144,15 @@ export function setupModals(context) {
       }
     });
   });
+}
 
+/**
+ * Bind modal close actions (buttons, Escape key, backdrop clicks).
+ */
+function bindModalCloseActions() {
   document.querySelectorAll('.btn-close-modal, .btn-close').forEach((btn) => {
     btn.addEventListener('click', closeModals);
   });
-
-  // Close on Escape key or backdrop click
   window.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') closeModals();
   });
@@ -161,9 +161,6 @@ export function setupModals(context) {
       if (event.target === backdrop) closeModals();
     });
   });
-
-  setupFormSubmissions({ getActiveEvent, persistAndSync, refreshActiveView, showToast, onEventCreated });
-  setupExportActions({ getActiveEvent, showToast, onEventCreated });
 }
 
 /**
@@ -197,93 +194,29 @@ function handleFormAction(e, handlers, actionFn, successMessage) {
 }
 
 /**
- * Attach submission handlers to modal forms.
+ * Bind expense creation and editing forms.
  * @param {Object} handlers - Event manipulation functions.
  */
-function setupFormSubmissions(handlers) {
-  const { onEventCreated, showToast } = handlers;
-
-  // Add Expense Form
+function bindExpenseForms(handlers) {
   document.getElementById('form-add-expense')?.addEventListener('submit', (e) => {
     handleFormAction(e, handlers, (event) => {
+      const desc = document.getElementById('exp-description')?.value.trim();
+      if (!desc) {
+        handlers.showToast('Please enter an expense description.', 'error');
+        return false;
+      }
       event.expenses.push({
         id: generateUUID(),
         category: document.getElementById('exp-category').value,
-        description: document.getElementById('exp-description').value.trim(),
+        description: desc,
         estimated: Number(document.getElementById('exp-estimated').value) || 0,
         actual: Number(document.getElementById('exp-actual').value) || 0,
         status: document.getElementById('exp-status').value
       });
+      return true;
     }, 'Expense item added successfully.');
   });
 
-  // Add Milestone Form
-  document.getElementById('form-add-milestone')?.addEventListener('submit', (e) => {
-    handleFormAction(e, handlers, (event) => {
-      event.milestones.push({
-        id: generateUUID(),
-        title: document.getElementById('ms-title').value.trim(),
-        phase: document.getElementById('ms-phase').value,
-        date: document.getElementById('ms-date').value,
-        notes: document.getElementById('ms-notes').value.trim(),
-        completed: false
-      });
-    }, 'Run-of-show milestone created.');
-  });
-
-  // Add Vendor Form
-  document.getElementById('form-add-vendor')?.addEventListener('submit', (e) => {
-    handleFormAction(e, handlers, (event) => {
-      event.vendors.push({
-        id: generateUUID(),
-        category: document.getElementById('ven-category').value,
-        name: document.getElementById('ven-name').value.trim(),
-        contact: document.getElementById('ven-contact').value.trim(),
-        fee: Number(document.getElementById('ven-fee').value) || 0,
-        status: document.getElementById('ven-status').value
-      });
-    }, 'Vendor partner registered.');
-  });
-
-  // Create New Celebration Form
-  document.getElementById('form-create-event')?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const currency = document.getElementById('evt-currency')?.value || 'USD';
-    const themeNotes = document.getElementById('evt-theme-notes')?.value?.trim() || '';
-    const newEvt = {
-      id: generateUUID(),
-      name: document.getElementById('evt-name').value.trim(),
-      type: document.getElementById('evt-type').value,
-      date: document.getElementById('evt-date').value,
-      budget: Number(document.getElementById('evt-budget').value) || 10000,
-      currency: currency,
-      themeNotes: themeNotes,
-      guestCount: Number(document.getElementById('evt-guests').value) || 50,
-      expenses: [],
-      milestones: [],
-      vendors: [],
-      savedPlans: []
-    };
-    onEventCreated(newEvt);
-    closeModals();
-    e.target.reset();
-    showToast(`Celebration "${newEvt.name}" created!`);
-  });
-
-  // Edit Active Celebration Form
-  document.getElementById('form-edit-event')?.addEventListener('submit', (e) => {
-    handleFormAction(e, handlers, (event) => {
-      event.name = document.getElementById('edit-evt-name').value.trim();
-      event.type = document.getElementById('edit-evt-type').value;
-      event.currency = document.getElementById('edit-evt-currency').value;
-      event.date = document.getElementById('edit-evt-date').value;
-      event.budget = Number(document.getElementById('edit-evt-budget').value) || 10000;
-      event.guestCount = Number(document.getElementById('edit-evt-guests').value) || 50;
-      event.themeNotes = document.getElementById('edit-evt-theme-notes').value.trim();
-    }, (event) => `Updated details for "${event.name}".`);
-  });
-
-  // Edit Expense Form
   document.getElementById('form-edit-expense')?.addEventListener('submit', (e) => {
     handleFormAction(e, handlers, (event) => {
       const id = document.getElementById('edit-exp-id').value;
@@ -294,10 +227,35 @@ function setupFormSubmissions(handlers) {
       item.estimated = Number(document.getElementById('edit-exp-estimated').value) || 0;
       item.actual = Number(document.getElementById('edit-exp-actual').value) || 0;
       item.status = document.getElementById('edit-exp-status').value;
+      return true;
     }, 'Expense item updated.');
   });
+}
 
-  // Edit Milestone Form
+/**
+ * Bind milestone creation and editing forms.
+ * @param {Object} handlers - Event manipulation functions.
+ */
+function bindMilestoneForms(handlers) {
+  document.getElementById('form-add-milestone')?.addEventListener('submit', (e) => {
+    handleFormAction(e, handlers, (event) => {
+      const title = document.getElementById('ms-title')?.value.trim();
+      if (!title) {
+        handlers.showToast('Please provide a milestone title.', 'error');
+        return false;
+      }
+      event.milestones.push({
+        id: generateUUID(),
+        title: title,
+        phase: document.getElementById('ms-phase').value,
+        date: document.getElementById('ms-date').value,
+        notes: document.getElementById('ms-notes').value.trim(),
+        completed: false
+      });
+      return true;
+    }, 'Run-of-show milestone created.');
+  });
+
   document.getElementById('form-edit-milestone')?.addEventListener('submit', (e) => {
     handleFormAction(e, handlers, (event) => {
       const id = document.getElementById('edit-ms-id').value;
@@ -307,10 +265,35 @@ function setupFormSubmissions(handlers) {
       item.phase = document.getElementById('edit-ms-phase').value;
       item.date = document.getElementById('edit-ms-date').value;
       item.notes = document.getElementById('edit-ms-notes').value.trim();
+      return true;
     }, 'Milestone updated.');
   });
+}
 
-  // Edit Vendor Form
+/**
+ * Bind vendor creation and editing forms.
+ * @param {Object} handlers - Event manipulation functions.
+ */
+function bindVendorForms(handlers) {
+  document.getElementById('form-add-vendor')?.addEventListener('submit', (e) => {
+    handleFormAction(e, handlers, (event) => {
+      const name = document.getElementById('ven-name')?.value.trim();
+      if (!name) {
+        handlers.showToast('Please provide a vendor name.', 'error');
+        return false;
+      }
+      event.vendors.push({
+        id: generateUUID(),
+        category: document.getElementById('ven-category').value,
+        name: name,
+        contact: document.getElementById('ven-contact').value.trim(),
+        fee: Number(document.getElementById('ven-fee').value) || 0,
+        status: document.getElementById('ven-status').value
+      });
+      return true;
+    }, 'Vendor partner registered.');
+  });
+
   document.getElementById('form-edit-vendor')?.addEventListener('submit', (e) => {
     handleFormAction(e, handlers, (event) => {
       const id = document.getElementById('edit-ven-id').value;
@@ -321,10 +304,16 @@ function setupFormSubmissions(handlers) {
       item.contact = document.getElementById('edit-ven-contact').value.trim();
       item.fee = Number(document.getElementById('edit-ven-fee').value) || 0;
       item.status = document.getElementById('edit-ven-status').value;
+      return true;
     }, 'Vendor updated.');
   });
+}
 
-  // Add Vendor Checklist Task Form
+/**
+ * Bind vendor checklist task addition form.
+ * @param {Object} handlers - Event manipulation functions.
+ */
+function bindChecklistForm(handlers) {
   document.getElementById('form-add-checklist-task')?.addEventListener('submit', (e) => {
     e.preventDefault();
     const event = handlers.getActiveEvent();
@@ -340,9 +329,100 @@ function setupFormSubmissions(handlers) {
       handlers.persistAndSync();
       handlers.refreshActiveView();
       if (input) input.value = '';
-      showToast('Vendor task added to checklist.');
+      handlers.showToast('Vendor task added to checklist.');
     }
   });
+}
+
+/**
+ * Bind new celebration creation form.
+ * @param {Object} handlers - Event manipulation functions.
+ */
+function bindNewCelebrationForm(handlers) {
+  document.getElementById('form-create-event')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = document.getElementById('evt-name')?.value.trim();
+    if (!name) {
+      handlers.showToast('Celebration name is required.', 'error');
+      return;
+    }
+    const newEvt = {
+      id: generateUUID(),
+      name: name,
+      type: document.getElementById('evt-type').value,
+      date: document.getElementById('evt-date').value,
+      budget: Number(document.getElementById('evt-budget').value) || APP_CONFIG.LIMITS.DEFAULT_BUDGET,
+      currency: document.getElementById('evt-currency')?.value || 'USD',
+      themeNotes: document.getElementById('evt-theme-notes')?.value?.trim() || '',
+      guestCount: Number(document.getElementById('evt-guests').value) || APP_CONFIG.LIMITS.DEFAULT_GUESTS,
+      expenses: [],
+      milestones: [],
+      vendors: [],
+      savedPlans: []
+    };
+    handlers.onEventCreated(newEvt);
+    closeModals();
+    e.target.reset();
+    handlers.showToast(`Celebration "${newEvt.name}" created!`);
+  });
+}
+
+/**
+ * Bind celebration detail edit form.
+ * @param {Object} handlers - Event manipulation functions.
+ */
+function bindEditCelebrationForm(handlers) {
+  document.getElementById('form-edit-event')?.addEventListener('submit', (e) => {
+    handleFormAction(e, handlers, (event) => {
+      event.name = document.getElementById('edit-evt-name').value.trim();
+      event.type = document.getElementById('edit-evt-type').value;
+      event.currency = document.getElementById('edit-evt-currency').value;
+      event.date = document.getElementById('edit-evt-date').value;
+      event.budget = Number(document.getElementById('edit-evt-budget').value) || APP_CONFIG.LIMITS.DEFAULT_BUDGET;
+      event.guestCount = Number(document.getElementById('edit-evt-guests').value) || APP_CONFIG.LIMITS.DEFAULT_GUESTS;
+      event.themeNotes = document.getElementById('edit-evt-theme-notes').value.trim();
+      return true;
+    }, (event) => `Updated details for "${event.name}".`);
+  });
+}
+
+/**
+ * Handle restoring celebration data from user-selected JSON file.
+ * @param {Event} e - Input change event.
+ * @param {Function} onEventCreated - Creation callback.
+ * @param {Function} showToast - Toast notifier.
+ */
+function handleJsonRestoreFile(e, onEventCreated, showToast) {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    try {
+      const parsed = JSON.parse(event.target.result);
+      if (!parsed || typeof parsed !== 'object' || !parsed.name) {
+        showToast('Invalid backup file structure.', 'error');
+        return;
+      }
+      const restored = {
+        id: parsed.id || generateUUID(),
+        name: String(parsed.name).slice(0, APP_CONFIG.LIMITS.MAX_EVENT_NAME_LENGTH),
+        type: parsed.type || 'Wedding',
+        date: parsed.date || new Date().toISOString().split('T')[0],
+        budget: Number(parsed.budget) || APP_CONFIG.LIMITS.DEFAULT_BUDGET,
+        guestCount: Number(parsed.guestCount) || APP_CONFIG.LIMITS.DEFAULT_GUESTS,
+        expenses: Array.isArray(parsed.expenses) ? parsed.expenses : [],
+        milestones: Array.isArray(parsed.milestones) ? parsed.milestones : [],
+        vendors: Array.isArray(parsed.vendors) ? parsed.vendors : []
+      };
+      onEventCreated(restored);
+      closeModals();
+      showToast(`Celebration "${restored.name}" restored from backup!`);
+    } catch (parseError) {
+      showToast('Failed to parse backup JSON file.', 'error');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
 }
 
 /**
@@ -369,36 +449,28 @@ function setupExportActions(context) {
   });
 
   document.getElementById('input-restore-json')?.addEventListener('change', (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const parsed = JSON.parse(event.target.result);
-        if (!parsed || typeof parsed !== 'object' || !parsed.name) {
-          showToast('Invalid backup file structure.', 'error');
-          return;
-        }
-        const restored = {
-          id: parsed.id || generateUUID(),
-          name: String(parsed.name).slice(0, 100),
-          type: parsed.type || 'Wedding',
-          date: parsed.date || new Date().toISOString().split('T')[0],
-          budget: Number(parsed.budget) || 10000,
-          guestCount: Number(parsed.guestCount) || 50,
-          expenses: Array.isArray(parsed.expenses) ? parsed.expenses : [],
-          milestones: Array.isArray(parsed.milestones) ? parsed.milestones : [],
-          vendors: Array.isArray(parsed.vendors) ? parsed.vendors : []
-        };
-        onEventCreated(restored);
-        closeModals();
-        showToast(`Celebration "${restored.name}" restored from backup!`);
-      } catch {
-        showToast('Failed to parse backup JSON file.', 'error');
-      }
-    };
-    reader.readAsText(file);
-    e.target.value = '';
+    handleJsonRestoreFile(e, onEventCreated, showToast);
   });
 }
 
+/**
+ * Configure modal open/close triggers, keyboard accessibility, and forms.
+ * @param {Object} context - Application callbacks and state accessors.
+ */
+export function setupModals(context) {
+  const { getActiveEvent, persistAndSync, refreshActiveView, showToast, onEventCreated } = context;
+  const handlers = { getActiveEvent, persistAndSync, refreshActiveView, showToast, onEventCreated };
+
+  bindModalOpenTriggers(getActiveEvent);
+  bindEventTypeSelection();
+  bindModalCloseActions();
+
+  bindExpenseForms(handlers);
+  bindMilestoneForms(handlers);
+  bindVendorForms(handlers);
+  bindChecklistForm(handlers);
+  bindNewCelebrationForm(handlers);
+  bindEditCelebrationForm(handlers);
+
+  setupExportActions(context);
+}

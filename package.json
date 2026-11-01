@@ -12,7 +12,8 @@
     "build": "node --check server.js services/geminiService.js",
     "dev": "node --watch server.js",
     "test": "node tests/run_tests.js",
-    "lint": "node --check server.js services/geminiService.js scripts/app.js scripts/modal-controller.js scripts/api.js scripts/utils.js scripts/events-data.js scripts/ui-renderers.js scripts/config.js"
+    "lint": "node tests/code_quality_check.js && node --check server.js services/geminiService.js scripts/app.js scripts/modal-controller.js scripts/api.js scripts/utils.js scripts/events-data.js scripts/ui-renderers.js scripts/config.js",
+    "format": "node tests/code_quality_check.js"
   },
   "keywords": [
     "event-planner",

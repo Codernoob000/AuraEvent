@@ -1,13 +1,11 @@
 /**
- * @fileoverview Application configuration constants and public endpoint definitions.
+ * @fileoverview Application configuration constants, schemas, and endpoint definitions.
  * Security Note: Strictly conforms to Rule 1 of the Security Constitution.
  * Client files contain ZERO secrets, private tokens, or backend credentials.
  */
 
-/* eslint-disable no-unused-vars */
-
 /**
- * Public client-side configuration parameters.
+ * Public client-side configuration parameters and shared business constants.
  * All API requests route securely through the local backend proxy.
  */
 export const APP_CONFIG = Object.freeze({
@@ -74,5 +72,46 @@ export const APP_CONFIG = Object.freeze({
     'Contract Sent',
     'Confirmed',
     'Completed'
+  ]),
+
+  /** Run-of-show milestone phases */
+  TIMELINE_PHASES: Object.freeze([
+    'Planning',
+    'Preparation',
+    'Execution',
+    'Day of',
+    'Ceremony',
+    'Reception',
+    'Breakdown'
+  ]),
+
+  /** Expense line item payment statuses */
+  EXPENSE_STATUSES: Object.freeze([
+    'Paid in Full',
+    'Deposit Paid',
+    'Pending'
+  ]),
+
+  /** Business rule limits and thresholds */
+  LIMITS: Object.freeze({
+    MAX_EVENT_NAME_LENGTH: 120,
+    MAX_THEME_PROMPT_LENGTH: 120,
+    MAX_VIBE_LENGTH: 80,
+    MAX_BUDGET: 10000000,
+    MIN_BUDGET: 100,
+    DEFAULT_BUDGET: 10000,
+    MAX_GUESTS: 50000,
+    MIN_GUESTS: 1,
+    DEFAULT_GUESTS: 50
+  }),
+
+  /** Default color palette fallbacks */
+  FALLBACK_PALETTES: Object.freeze([
+    '#0F172A',
+    '#92400E',
+    '#065F46',
+    '#B45309',
+    '#D97706',
+    '#475569'
   ])
 });
