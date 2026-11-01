@@ -46,7 +46,17 @@ app.use(helmet({
 }));
 
 /* ==========================================================================
-   2. CORS Configuration (Rule 6)
+   2. Static Assets Serving
+   Serve client assets first so JavaScript modules and CSS are never blocked
+   by API-specific CORS or JSON parsing middleware.
+   ========================================================================== */
+app.use('/scripts', express.static(path.join(__dirname, 'scripts')));
+app.use('/styles', express.static(path.join(__dirname, 'styles')));
+app.use('/screenshots', express.static(path.join(__dirname, 'screenshots')));
+app.use(express.static(__dirname));
+
+/* ==========================================================================
+   3. CORS Configuration (Rule 6)
    ========================================================================== */
 const configuredOrigins = (process.env.ALLOWED_ORIGIN || '')
   .split(',')
@@ -74,6 +84,10 @@ app.use(cors({
     if (/^https:\/\/[a-z0-9-]+\.onrender\.com$/i.test(origin)) {
       return callback(null, true);
     }
+    // Permit local loopback origins on any port for development and testing
+    if (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin)) {
+      return callback(null, true);
+    }
     return callback(new Error('CORS policy: Origin not allowed.'));
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -81,7 +95,6 @@ app.use(cors({
 }));
 
 app.use(express.json({ limit: '1mb' }));
-app.use(express.static(__dirname));
 
 /* ==========================================================================
    3. Rate Limiting per Endpoint Type (Rule 2)
