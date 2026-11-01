@@ -1,0 +1,7 @@
+node_modules/
+docs/screenshots/
+.impeccable/
+.gemini/
+.codex/
+package-lock.json
+

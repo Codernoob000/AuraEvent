@@ -43,22 +43,24 @@ const SERVER_KEEP_ALIVE_MS = 1000 * 60 * 60;
 /* ==========================================================================
    1. Security Headers (Rule 7)
    ========================================================================== */
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "https://cdnjs.cloudflare.com"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", "https://calendar.google.com"]
-    }
-  },
-  xFrameOptions: { action: 'deny' },
-  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
-  xContentTypeOptions: true,
-  hidePoweredBy: true
-}));
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", 'https://cdnjs.cloudflare.com'],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+        fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+        imgSrc: ["'self'", 'data:', 'https:'],
+        connectSrc: ["'self'", 'https://calendar.google.com']
+      }
+    },
+    xFrameOptions: { action: 'deny' },
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+    xContentTypeOptions: true,
+    hidePoweredBy: true
+  })
+);
 
 /* ==========================================================================
    2. Static Assets Serving
@@ -75,7 +77,7 @@ app.use(express.static(__dirname));
    ========================================================================== */
 const configuredOrigins = (process.env.ALLOWED_ORIGIN || '')
   .split(',')
-  .map((originStr) => originStr.trim())
+  .map(originStr => originStr.trim())
   .filter(Boolean);
 
 const allowedOrigins = [
@@ -110,11 +112,13 @@ function validateCorsOrigin(origin, callback) {
   return callback(new Error('CORS policy: Origin not allowed.'));
 }
 
-app.use(cors({
-  origin: validateCorsOrigin,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: validateCorsOrigin,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    credentials: true
+  })
+);
 
 app.use(express.json({ limit: MAX_JSON_PAYLOAD_SIZE }));
 
@@ -126,7 +130,7 @@ app.use(express.json({ limit: MAX_JSON_PAYLOAD_SIZE }));
  * @param {string} message - User-facing rate limit explanation.
  * @returns {Function} Express middleware callback.
  */
-const createRateLimitHandler = (message) => (req, res) => {
+const createRateLimitHandler = message => (req, res) => {
   res.setHeader('Retry-After', RETRY_AFTER_SECONDS);
   res.status(429).json({ error: message });
 };
@@ -136,7 +140,9 @@ const generalLimiter = rateLimit({
   max: GENERAL_RATE_LIMIT,
   standardHeaders: true,
   legacyHeaders: false,
-  handler: createRateLimitHandler('General API limit reached (60 requests/min). Please retry shortly.')
+  handler: createRateLimitHandler(
+    'General API limit reached (60 requests/min). Please retry shortly.'
+  )
 });
 
 const aiLimiter = rateLimit({
@@ -144,7 +150,9 @@ const aiLimiter = rateLimit({
   max: AI_RATE_LIMIT,
   standardHeaders: true,
   legacyHeaders: false,
-  handler: createRateLimitHandler('AI inspiration request limit reached (10 requests/min). Please wait 60 seconds.')
+  handler: createRateLimitHandler(
+    'AI inspiration request limit reached (10 requests/min). Please wait 60 seconds.'
+  )
 });
 
 const mutateLimiter = rateLimit({
@@ -152,7 +160,9 @@ const mutateLimiter = rateLimit({
   max: MUTATE_RATE_LIMIT,
   standardHeaders: true,
   legacyHeaders: false,
-  handler: createRateLimitHandler('Data update limit reached. Please wait a moment before saving again.')
+  handler: createRateLimitHandler(
+    'Data update limit reached. Please wait a moment before saving again.'
+  )
 });
 
 app.use('/api/', generalLimiter);
@@ -252,7 +262,9 @@ app.put('/api/events/:id', mutateLimiter, (req, res, next) => {
 
     if (existing) {
       if (!clientToken || clientToken !== existing.ownerToken) {
-        return res.status(403).json({ error: 'Forbidden: Missing or invalid event ownership token.' });
+        return res
+          .status(403)
+          .json({ error: 'Forbidden: Missing or invalid event ownership token.' });
       }
       existing.data = parseResult.data;
       existing.updatedAt = new Date();
@@ -260,9 +272,10 @@ app.put('/api/events/:id', mutateLimiter, (req, res, next) => {
     }
 
     // New event: assign persistent cryptographic ownership token
-    const ownerToken = (typeof clientToken === 'string' && clientToken.length >= MIN_OWNER_TOKEN_LENGTH)
-      ? clientToken
-      : crypto.randomUUID();
+    const ownerToken =
+      typeof clientToken === 'string' && clientToken.length >= MIN_OWNER_TOKEN_LENGTH
+        ? clientToken
+        : crypto.randomUUID();
 
     IN_MEMORY_DB.set(eventId, {
       data: parseResult.data,
@@ -282,7 +295,9 @@ app.put('/api/events/:id', mutateLimiter, (req, res, next) => {
    ========================================================================== */
 app.use((err, req, res, _next) => {
   if (!IS_PROD) {
-    process.stderr.write(`[ERROR] ${new Date().toISOString()} ${req.method} ${req.url}: ${err.message}\n`);
+    process.stderr.write(
+      `[ERROR] ${new Date().toISOString()} ${req.method} ${req.url}: ${err.message}\n`
+    );
   }
   res.status(500).json({ error: 'Something went wrong. Please try again.' });
 });
@@ -290,18 +305,26 @@ app.use((err, req, res, _next) => {
 /* ==========================================================================
    8. Start Server
    ========================================================================== */
-const isMainModule = process.argv[1] && (
-  path.resolve(process.argv[1]).toLowerCase() === fileURLToPath(import.meta.url).toLowerCase() ||
-  process.argv[1].endsWith('server.js')
-);
+const isMainModule =
+  process.argv[1] &&
+  (path.resolve(process.argv[1]).toLowerCase() === fileURLToPath(import.meta.url).toLowerCase() ||
+    process.argv[1].endsWith('server.js'));
 if (isMainModule) {
   const server = app.listen(PORT, HOST, () => {
-    process.stdout.write(`AuraEvent Server running securely on http://${HOST}:${PORT} (NODE_ENV=${process.env.NODE_ENV || 'development'})\n`);
+    process.stdout.write(
+      `AuraEvent Server running securely on http://${HOST}:${PORT} (NODE_ENV=${process.env.NODE_ENV || 'development'})\n`
+    );
   });
   // Ensure Node event loop retains active reference on non-interactive Windows shells
   const keepAlive = setInterval(() => {}, SERVER_KEEP_ALIVE_MS);
-  process.on('SIGTERM', () => { clearInterval(keepAlive); server.close(); });
-  process.on('SIGINT', () => { clearInterval(keepAlive); server.close(); });
+  process.on('SIGTERM', () => {
+    clearInterval(keepAlive);
+    server.close();
+  });
+  process.on('SIGINT', () => {
+    clearInterval(keepAlive);
+    server.close();
+  });
 }
 
 export default app;

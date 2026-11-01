@@ -24,7 +24,7 @@ async function handleApiError(response) {
     if (errorData && typeof errorData.error === 'string') {
       errorMessage = errorData.error;
     }
-  } catch (parseError) {
+  } catch (_parseError) {
     errorMessage = response.statusText || errorMessage;
   }
 
@@ -47,9 +47,10 @@ async function fetchWithRetry(url, options, retries = APP_CONFIG.MAX_RETRY_ATTEM
     }
     return await response.json();
   } catch (error) {
-    const isNetworkError = error instanceof Error && error.message.toLowerCase().includes('network');
+    const isNetworkError =
+      error instanceof Error && error.message.toLowerCase().includes('network');
     if (retries > 0 && isNetworkError) {
-      await new Promise((resolve) => setTimeout(resolve, APP_CONFIG.DEFAULT_RETRY_DELAY_MS));
+      await new Promise(resolve => setTimeout(resolve, APP_CONFIG.DEFAULT_RETRY_DELAY_MS));
       return fetchWithRetry(url, options, retries - 1);
     }
     throw error;
@@ -68,7 +69,7 @@ function getOfflineThemes(eventType, budget) {
       title: `${eventType} Starlight Elegance`,
       concept: 'Warm amber illumination, metallic accents, and refined acoustic entertainment.',
       decorPalette: ['#0F172A', '#D97706', '#FAF8F5'],
-      budgetTip: `Focus 40% ($${Math.round(budget * 0.40)}) of decor budget on strategic lighting rather than floral volume.`
+      budgetTip: `Focus 40% ($${Math.round(budget * 0.4)}) of decor budget on strategic lighting rather than floral volume.`
     },
     {
       title: 'Modern Botanical Harvest',
@@ -87,10 +88,30 @@ function getOfflineThemes(eventType, budget) {
  */
 function getOfflineBudgetAllocations(eventType, budget) {
   return [
-    { category: 'Catering', item: `${eventType} Plated Dinner & Beverage Service`, cost: Math.round(budget * 0.40), notes: 'Covers reception dinner, cocktail service, and table staff' },
-    { category: 'Decor', item: 'Ambient Uplighting & Floral Installations', cost: Math.round(budget * 0.20), notes: 'Custom floral arrangements, uplighting, and linens' },
-    { category: 'Entertainment', item: 'Acoustic Trio & Sound Engineering', cost: Math.round(budget * 0.15), notes: 'Live reception performance and audio management' },
-    { category: 'Photography', item: 'Fine Art Celebration Photography', cost: Math.round(budget * 0.15), notes: 'Full ceremony and reception documentary coverage' }
+    {
+      category: 'Catering',
+      item: `${eventType} Plated Dinner & Beverage Service`,
+      cost: Math.round(budget * 0.4),
+      notes: 'Covers reception dinner, cocktail service, and table staff'
+    },
+    {
+      category: 'Decor',
+      item: 'Ambient Uplighting & Floral Installations',
+      cost: Math.round(budget * 0.2),
+      notes: 'Custom floral arrangements, uplighting, and linens'
+    },
+    {
+      category: 'Entertainment',
+      item: 'Acoustic Trio & Sound Engineering',
+      cost: Math.round(budget * 0.15),
+      notes: 'Live reception performance and audio management'
+    },
+    {
+      category: 'Photography',
+      item: 'Fine Art Celebration Photography',
+      cost: Math.round(budget * 0.15),
+      notes: 'Full ceremony and reception documentary coverage'
+    }
   ];
 }
 
@@ -111,15 +132,50 @@ function getOfflineEventInspiration(context) {
     themes: getOfflineThemes(eventType, budget),
     budgetAllocations: getOfflineBudgetAllocations(eventType, budget),
     suggestedMilestones: [
-      { title: 'Lock Venue & Catering Contracts', offsetDays: -90, phase: 'Planning', notes: 'Confirm site hold, deposits, and dietary restriction guidelines' },
-      { title: 'Finalize Decor, Florals & Place Settings', offsetDays: -30, phase: 'Preparation', notes: 'Approve centerpiece proofs, table linens, and lighting schemes' },
-      { title: 'Production Walkthrough & Sound Check', offsetDays: -7, phase: 'Execution', notes: 'Coordinate vendor load-in schedule and power requirements' },
-      { title: 'Guest Reception & Celebration Gala', offsetDays: 0, phase: 'Day of', notes: 'Execute welcome toast, ceremony run-of-show, and formal dinner' }
+      {
+        title: 'Lock Venue & Catering Contracts',
+        offsetDays: -90,
+        phase: 'Planning',
+        notes: 'Confirm site hold, deposits, and dietary restriction guidelines'
+      },
+      {
+        title: 'Finalize Decor, Florals & Place Settings',
+        offsetDays: -30,
+        phase: 'Preparation',
+        notes: 'Approve centerpiece proofs, table linens, and lighting schemes'
+      },
+      {
+        title: 'Production Walkthrough & Sound Check',
+        offsetDays: -7,
+        phase: 'Execution',
+        notes: 'Coordinate vendor load-in schedule and power requirements'
+      },
+      {
+        title: 'Guest Reception & Celebration Gala',
+        offsetDays: 0,
+        phase: 'Day of',
+        notes: 'Execute welcome toast, ceremony run-of-show, and formal dinner'
+      }
     ],
     suggestedVendors: [
-      { category: 'Catering', name: 'Artisan Hospitality Co.', fee: Math.round(budget * 0.40), notes: 'Vetting: What is your dietary accommodation policy for allergies?' },
-      { category: 'Decor', name: 'Lumière Floral & Event Design', fee: Math.round(budget * 0.20), notes: 'Vetting: Are delivery, setup, and late-night strike included?' },
-      { category: 'Photography', name: 'Aura Fine Art Photography', fee: Math.round(budget * 0.15), notes: 'Vetting: What is the delivery timeline for edited online galleries?' }
+      {
+        category: 'Catering',
+        name: 'Artisan Hospitality Co.',
+        fee: Math.round(budget * 0.4),
+        notes: 'Vetting: What is your dietary accommodation policy for allergies?'
+      },
+      {
+        category: 'Decor',
+        name: 'Lumière Floral & Event Design',
+        fee: Math.round(budget * 0.2),
+        notes: 'Vetting: Are delivery, setup, and late-night strike included?'
+      },
+      {
+        category: 'Photography',
+        name: 'Aura Fine Art Photography',
+        fee: Math.round(budget * 0.15),
+        notes: 'Vetting: What is the delivery timeline for edited online galleries?'
+      }
     ],
     vendorQuestions: [
       'What setup and breakdown window is included in your standard quote?',
@@ -151,14 +207,14 @@ export async function generateEventInspiration(eventContext) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Accept': 'application/json'
+      Accept: 'application/json'
     },
     body: JSON.stringify(eventContext)
   };
 
   try {
     return await fetchWithRetry(requestUrl, requestOptions);
-  } catch (error) {
+  } catch (_error) {
     // Graceful fallback: return curated offline inspiration if backend or AI service is unreachable
     return getOfflineEventInspiration(eventContext);
   }
@@ -174,11 +230,11 @@ export async function fetchEventData(eventId) {
   try {
     const response = await fetch(requestUrl, {
       method: 'GET',
-      headers: { 'Accept': 'application/json' }
+      headers: { Accept: 'application/json' }
     });
     if (!response.ok) return null;
     return await response.json();
-  } catch (fetchError) {
+  } catch (_fetchError) {
     return null; // Fall back to local storage cleanly on connection interruptions
   }
 }
@@ -191,7 +247,7 @@ export async function fetchEventData(eventId) {
 function getOwnerToken(tokenKey) {
   try {
     return localStorage.getItem(tokenKey);
-  } catch (storageError) {
+  } catch (_storageError) {
     return null;
   }
 }
@@ -206,7 +262,7 @@ function persistOwnerToken(tokenKey, token) {
   try {
     localStorage.setItem(tokenKey, token);
     return true;
-  } catch (storageError) {
+  } catch (_storageError) {
     return false;
   }
 }
@@ -224,17 +280,21 @@ export async function syncEventData(eventData) {
   const token = getOwnerToken(tokenKey);
 
   try {
-    const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
+    const headers = { 'Content-Type': 'application/json', Accept: 'application/json' };
     if (token) headers['x-event-token'] = token;
 
-    const response = await fetch(requestUrl, { method: 'PUT', headers, body: JSON.stringify(eventData) });
+    const response = await fetch(requestUrl, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(eventData)
+    });
     if (response.ok) {
       const resData = await response.json();
       if (resData?.ownerToken) persistOwnerToken(tokenKey, resData.ownerToken);
       return true;
     }
     return false;
-  } catch (networkError) {
+  } catch (_networkError) {
     return false; // Retain local state quietly on sync interruption
   }
 }

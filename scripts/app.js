@@ -85,7 +85,7 @@ export function showToast(message, type = 'success') {
  * @returns {Object} Active event.
  */
 export function getActiveEvent() {
-  return APP_STATE.events.find((evt) => evt.id === APP_STATE.activeId) || APP_STATE.events[0];
+  return APP_STATE.events.find(evt => evt.id === APP_STATE.activeId) || APP_STATE.events[0];
 }
 
 /**
@@ -95,7 +95,7 @@ export function persistAndSync() {
   saveEventsToStorage(APP_STATE.events);
   const activeEvt = getActiveEvent();
   if (activeEvt) {
-    syncEventData(activeEvt).catch((syncError) => {
+    syncEventData(activeEvt).catch(_syncError => {
       // Retain local state cleanly if remote sync is interrupted
     });
   }
@@ -108,7 +108,7 @@ function updateEventSelectorOptions() {
   const selectElem = document.getElementById('event-select-input');
   if (!selectElem) return;
   selectElem.innerHTML = '';
-  APP_STATE.events.forEach((evt) => {
+  APP_STATE.events.forEach(evt => {
     const opt = document.createElement('option');
     opt.value = evt.id;
     opt.textContent = `${evt.name} (${evt.type})`;
@@ -140,7 +140,8 @@ function updateWorkspaceHeader(event) {
   const wsMeta = document.getElementById('ai-workspace-event-meta');
   const savedCount = document.getElementById('saved-plans-count');
   if (wsName) wsName.textContent = event.name;
-  if (wsMeta) wsMeta.textContent = `${event.type} · ${formatCurrency(event.budget, event.currency || 'USD')} · ${event.guestCount} guests`;
+  if (wsMeta)
+    wsMeta.textContent = `${event.type} · ${formatCurrency(event.budget, event.currency || 'USD')} · ${event.guestCount} guests`;
   if (savedCount) savedCount.textContent = String((event.savedPlans || []).length);
 
   const setInputValue = (id, val) => {
@@ -169,8 +170,21 @@ export function refreshActiveView() {
 
   renderMastheadMetrics(event);
   renderBudgetModule(event, handleDeleteExpense, handleEditExpense);
-  renderTimelineRibbon(event, handleToggleMilestone, handleDeleteMilestone, CURRENT_TIMELINE_PHASE, handleEditMilestone);
-  renderVendorModule(event, handleDeleteVendor, handleUpdateVendorStatus, handleEditVendor, handleToggleChecklist, handleDeleteChecklist);
+  renderTimelineRibbon(
+    event,
+    handleToggleMilestone,
+    handleDeleteMilestone,
+    CURRENT_TIMELINE_PHASE,
+    handleEditMilestone
+  );
+  renderVendorModule(
+    event,
+    handleDeleteVendor,
+    handleUpdateVendorStatus,
+    handleEditVendor,
+    handleToggleChecklist,
+    handleDeleteChecklist
+  );
 
   updateBadgeCounters(event);
   updateWorkspaceHeader(event);
@@ -182,7 +196,7 @@ export function refreshActiveView() {
  */
 function handleDeleteExpense(expenseId) {
   const event = getActiveEvent();
-  event.expenses = (event.expenses || []).filter((item) => item.id !== expenseId);
+  event.expenses = (event.expenses || []).filter(item => item.id !== expenseId);
   persistAndSync();
   refreshActiveView();
   showToast('Expense item removed.', 'success');
@@ -194,7 +208,7 @@ function handleDeleteExpense(expenseId) {
  */
 function handleEditExpense(expenseId) {
   const event = getActiveEvent();
-  const expense = (event.expenses || []).find((e) => e.id === expenseId);
+  const expense = (event.expenses || []).find(e => e.id === expenseId);
   if (expense) openEditExpenseModal(expense);
 }
 
@@ -204,7 +218,7 @@ function handleEditExpense(expenseId) {
  */
 function handleEditMilestone(milestoneId) {
   const event = getActiveEvent();
-  const ms = (event.milestones || []).find((m) => m.id === milestoneId);
+  const ms = (event.milestones || []).find(m => m.id === milestoneId);
   if (ms) openEditMilestoneModal(ms);
 }
 
@@ -214,7 +228,7 @@ function handleEditMilestone(milestoneId) {
  */
 function handleEditVendor(vendorId) {
   const event = getActiveEvent();
-  const ven = (event.vendors || []).find((v) => v.id === vendorId);
+  const ven = (event.vendors || []).find(v => v.id === vendorId);
   if (ven) openEditVendorModal(ven);
 }
 
@@ -224,7 +238,7 @@ function handleEditVendor(vendorId) {
  */
 function handleToggleChecklist(taskId) {
   const event = getActiveEvent();
-  const task = (event.vendorChecklist || []).find((t) => t.id === taskId);
+  const task = (event.vendorChecklist || []).find(t => t.id === taskId);
   if (task) {
     task.completed = !task.completed;
     persistAndSync();
@@ -238,7 +252,7 @@ function handleToggleChecklist(taskId) {
  */
 function handleDeleteChecklist(taskId) {
   const event = getActiveEvent();
-  event.vendorChecklist = (event.vendorChecklist || []).filter((t) => t.id !== taskId);
+  event.vendorChecklist = (event.vendorChecklist || []).filter(t => t.id !== taskId);
   persistAndSync();
   refreshActiveView();
   showToast('Vendor task removed.');
@@ -250,7 +264,7 @@ function handleDeleteChecklist(taskId) {
  */
 function handleToggleMilestone(milestoneId) {
   const event = getActiveEvent();
-  const ms = (event.milestones || []).find((m) => m.id === milestoneId);
+  const ms = (event.milestones || []).find(m => m.id === milestoneId);
   if (ms) {
     ms.completed = !ms.completed;
     persistAndSync();
@@ -265,7 +279,7 @@ function handleToggleMilestone(milestoneId) {
  */
 function handleDeleteMilestone(milestoneId) {
   const event = getActiveEvent();
-  event.milestones = (event.milestones || []).filter((m) => m.id !== milestoneId);
+  event.milestones = (event.milestones || []).filter(m => m.id !== milestoneId);
   persistAndSync();
   refreshActiveView();
   showToast('Milestone removed.', 'success');
@@ -277,7 +291,7 @@ function handleDeleteMilestone(milestoneId) {
  */
 function handleDeleteVendor(vendorId) {
   const event = getActiveEvent();
-  event.vendors = (event.vendors || []).filter((v) => v.id !== vendorId);
+  event.vendors = (event.vendors || []).filter(v => v.id !== vendorId);
   persistAndSync();
   refreshActiveView();
   showToast('Vendor removed.', 'success');
@@ -289,8 +303,13 @@ function handleDeleteVendor(vendorId) {
  */
 function handleUpdateVendorStatus(vendorId) {
   const event = getActiveEvent();
-  const stages = APP_CONFIG.VENDOR_STATUSES || ['Researching', 'Quoted', 'Contract Sent', 'Confirmed'];
-  const ven = (event.vendors || []).find((v) => v.id === vendorId);
+  const stages = APP_CONFIG.VENDOR_STATUSES || [
+    'Researching',
+    'Quoted',
+    'Contract Sent',
+    'Confirmed'
+  ];
+  const ven = (event.vendors || []).find(v => v.id === vendorId);
   if (ven) {
     const currentIndex = stages.indexOf(ven.status);
     const nextIndex = (currentIndex + 1) % stages.length;
@@ -306,13 +325,13 @@ function handleUpdateVendorStatus(vendorId) {
  */
 function setupNavigationTabs() {
   const tabs = document.querySelectorAll('.nav-tab');
-  tabs.forEach((tab) => {
+  tabs.forEach(tab => {
     tab.addEventListener('click', () => {
-      tabs.forEach((t) => {
+      tabs.forEach(t => {
         t.classList.remove('active');
         t.setAttribute('aria-selected', 'false');
       });
-      document.querySelectorAll('.tab-panel').forEach((panel) => panel.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
 
       tab.classList.add('active');
       tab.setAttribute('aria-selected', 'true');
@@ -334,14 +353,19 @@ function setupNavigationTabs() {
  */
 function setupTimelineFilters() {
   const filterBtns = document.querySelectorAll('.btn-timeline-filter');
-  filterBtns.forEach((btn) => {
+  filterBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-      filterBtns.forEach((b) => b.classList.remove('active'));
+      filterBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       CURRENT_TIMELINE_PHASE = btn.getAttribute('data-phase') || 'all';
       const event = getActiveEvent();
       if (event) {
-        renderTimelineRibbon(event, handleToggleMilestone, handleDeleteMilestone, CURRENT_TIMELINE_PHASE);
+        renderTimelineRibbon(
+          event,
+          handleToggleMilestone,
+          handleDeleteMilestone,
+          CURRENT_TIMELINE_PHASE
+        );
       }
     });
   });
@@ -353,7 +377,7 @@ function setupTimelineFilters() {
  * @param {string} tabId - Target tab identifier.
  */
 function bindTabJump(selector, tabId) {
-  document.querySelectorAll(selector).forEach((btn) => {
+  document.querySelectorAll(selector).forEach(btn => {
     btn.addEventListener('click', () => {
       const targetTab = document.getElementById(tabId);
       if (targetTab) targetTab.click();
@@ -368,7 +392,9 @@ function bindTabJump(selector, tabId) {
 function handleLoadSavedPlan(plan) {
   const activeEvt = getActiveEvent();
   CURRENT_GENERATED_PLAN = normalizeAIPlan(plan, activeEvt);
-  renderAIResults(CURRENT_GENERATED_PLAN, activeEvt, (p) => { CURRENT_GENERATED_PLAN = p; });
+  renderAIResults(CURRENT_GENERATED_PLAN, activeEvt, p => {
+    CURRENT_GENERATED_PLAN = p;
+  });
   closeModals();
   showToast('Loaded saved plan into Atelier.');
 }
@@ -379,7 +405,7 @@ function handleLoadSavedPlan(plan) {
  */
 function handleDeleteSavedPlan(savedId) {
   const activeEvt = getActiveEvent();
-  activeEvt.savedPlans = (activeEvt.savedPlans || []).filter((p) => p.id !== savedId);
+  activeEvt.savedPlans = (activeEvt.savedPlans || []).filter(p => p.id !== savedId);
   persistAndSync();
   renderSavedPlansModal(activeEvt, handleLoadSavedPlan, handleDeleteSavedPlan);
   const countSpan = document.getElementById('saved-plans-count');
@@ -392,7 +418,7 @@ function handleDeleteSavedPlan(savedId) {
  * @param {HTMLFormElement} form - Generator form element.
  */
 function bindAIGenerationForm(form) {
-  form.addEventListener('submit', async (e) => {
+  form.addEventListener('submit', async e => {
     e.preventDefault();
     const activeEvt = getActiveEvent();
     const payload = {
@@ -411,9 +437,11 @@ function bindAIGenerationForm(form) {
     try {
       const results = await generateEventInspiration(payload);
       CURRENT_GENERATED_PLAN = normalizeAIPlan(results, activeEvt);
-      renderAIResults(CURRENT_GENERATED_PLAN, activeEvt, (p) => { CURRENT_GENERATED_PLAN = p; });
+      renderAIResults(CURRENT_GENERATED_PLAN, activeEvt, p => {
+        CURRENT_GENERATED_PLAN = p;
+      });
       showToast('Gemini inspiration generated successfully!');
-    } catch (err) {
+    } catch (_err) {
       showToast('Unable to reach AI service. Showing offline suggestions.', 'error');
     } finally {
       shimmer?.classList.add('hidden');
@@ -482,21 +510,32 @@ function executePlanApplication() {
 
   const isEntire = PENDING_APPLY_CONTEXT?.isEntire ?? true;
   const candidates = renderPlanPreviewModal(activeEvt, CURRENT_GENERATED_PLAN, isEntire);
-  const { addedExpenses, addedMilestones, addedVendors } = applyRecommendationsToCelebration(activeEvt, candidates);
+  const { addedExpenses, addedMilestones, addedVendors } = applyRecommendationsToCelebration(
+    activeEvt,
+    candidates
+  );
 
   persistAndSync();
   refreshActiveView();
   closeModals();
-  showToast(`Applied to ${activeEvt.name}: +${addedExpenses} expenses, +${addedMilestones} milestones, +${addedVendors} vendors!`);
+  showToast(
+    `Applied to ${activeEvt.name}: +${addedExpenses} expenses, +${addedMilestones} milestones, +${addedVendors} vendors!`
+  );
 }
 
 /**
  * Bind plan preview triggers and application execution.
  */
 function bindPlanApplyActions() {
-  document.getElementById('btn-apply-entire-plan')?.addEventListener('click', () => openPlanPreview(true));
-  document.getElementById('btn-apply-selected-plan')?.addEventListener('click', () => openPlanPreview(false));
-  document.getElementById('btn-confirm-apply-plan')?.addEventListener('click', executePlanApplication);
+  document
+    .getElementById('btn-apply-entire-plan')
+    ?.addEventListener('click', () => openPlanPreview(true));
+  document
+    .getElementById('btn-apply-selected-plan')
+    ?.addEventListener('click', () => openPlanPreview(false));
+  document
+    .getElementById('btn-confirm-apply-plan')
+    ?.addEventListener('click', executePlanApplication);
 }
 
 /**
@@ -551,7 +590,7 @@ function handleUrlDeepLinking() {
   try {
     const params = new URLSearchParams(window.location.search);
     const initialEvent = params.get('event');
-    if (initialEvent && APP_STATE.events.some((e) => e.id === initialEvent)) {
+    if (initialEvent && APP_STATE.events.some(e => e.id === initialEvent)) {
       APP_STATE.activeId = initialEvent;
       saveActiveEventId(APP_STATE.activeId);
       const sel = document.getElementById('event-select-input');
@@ -560,7 +599,9 @@ function handleUrlDeepLinking() {
     }
     const initialTab = params.get('tab') || window.location.hash.replace('#', '');
     if (initialTab) {
-      const tabBtn = document.getElementById(`tab-${initialTab}`) || document.querySelector(`[aria-controls="panel-${initialTab}"]`);
+      const tabBtn =
+        document.getElementById(`tab-${initialTab}`) ||
+        document.querySelector(`[aria-controls="panel-${initialTab}"]`);
       if (tabBtn) tabBtn.click();
     }
     const initialModal = params.get('modal');
@@ -569,7 +610,8 @@ function handleUrlDeepLinking() {
       if (btnNew) btnNew.click();
     }
   } catch (deepLinkError) {
-    const errorMsg = deepLinkError instanceof Error ? deepLinkError.message : 'Invalid URL query parameters';
+    const errorMsg =
+      deepLinkError instanceof Error ? deepLinkError.message : 'Invalid URL query parameters';
     void errorMsg;
   }
 }
@@ -594,7 +636,7 @@ function initializeApp() {
   });
   setupAIWorkshop();
 
-  document.getElementById('event-select-input')?.addEventListener('change', (e) => {
+  document.getElementById('event-select-input')?.addEventListener('change', e => {
     APP_STATE.activeId = e.target.value;
     saveActiveEventId(APP_STATE.activeId);
     refreshActiveView();

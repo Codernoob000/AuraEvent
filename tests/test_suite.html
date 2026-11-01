@@ -1,136 +1,162 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AuraEvent Client Test Runner</title>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: #F8F9FA;
-      color: #0F172A;
-      padding: 2rem;
-      max-width: 900px;
-      margin: 0 auto;
-    }
-    h1 { font-size: 1.75rem; margin-bottom: 0.5rem; }
-    .status-card {
-      background: #0F172A;
-      color: #FFF;
-      padding: 1.25rem;
-      border-radius: 8px;
-      margin-bottom: 1.5rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .test-list { list-style: none; padding: 0; }
-    .test-item {
-      padding: 0.75rem 1rem;
-      background: #FFF;
-      margin-bottom: 0.5rem;
-      border-radius: 6px;
-      border: 1px solid #E2E8F0;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .badge-pass { background: #ECFDF5; color: #065F46; padding: 3px 8px; border-radius: 9999px; font-weight: 700; font-size: 0.75rem; }
-    .badge-fail { background: #FEF2F2; color: #991B1B; padding: 3px 8px; border-radius: 9999px; font-weight: 700; font-size: 0.75rem; }
-  </style>
-</head>
-<body>
-  <h1>AuraEvent Client Browser Test Suite</h1>
-  <p>Automated DOM and Client Logic Verification</p>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AuraEvent Client Test Runner</title>
+    <style>
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        background: #f8f9fa;
+        color: #0f172a;
+        padding: 2rem;
+        max-width: 900px;
+        margin: 0 auto;
+      }
+      h1 {
+        font-size: 1.75rem;
+        margin-bottom: 0.5rem;
+      }
+      .status-card {
+        background: #0f172a;
+        color: #fff;
+        padding: 1.25rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .test-list {
+        list-style: none;
+        padding: 0;
+      }
+      .test-item {
+        padding: 0.75rem 1rem;
+        background: #fff;
+        margin-bottom: 0.5rem;
+        border-radius: 6px;
+        border: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .badge-pass {
+        background: #ecfdf5;
+        color: #065f46;
+        padding: 3px 8px;
+        border-radius: 9999px;
+        font-weight: 700;
+        font-size: 0.75rem;
+      }
+      .badge-fail {
+        background: #fef2f2;
+        color: #991b1b;
+        padding: 3px 8px;
+        border-radius: 9999px;
+        font-weight: 700;
+        font-size: 0.75rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>AuraEvent Client Browser Test Suite</h1>
+    <p>Automated DOM and Client Logic Verification</p>
 
-  <div class="status-card">
-    <div>
-      <h2 style="font-size: 1.25rem; margin: 0;">Test Execution Summary</h2>
-      <p id="test-summary" style="margin: 0.25rem 0 0 0; color: #CBD5E1;">Executing test suite...</p>
+    <div class="status-card">
+      <div>
+        <h2 style="font-size: 1.25rem; margin: 0">Test Execution Summary</h2>
+        <p id="test-summary" style="margin: 0.25rem 0 0 0; color: #cbd5e1">
+          Executing test suite...
+        </p>
+      </div>
+      <div id="overall-badge" style="font-size: 1.25rem; font-weight: 700">RUNNING</div>
     </div>
-    <div id="overall-badge" style="font-size: 1.25rem; font-weight: 700;">RUNNING</div>
-  </div>
 
-  <ul id="test-results" class="test-list"></ul>
+    <ul id="test-results" class="test-list"></ul>
 
-  <script type="module">
-    import {
-      formatCurrency,
-      formatDate,
-      sanitizeHTML,
-      generateUUID,
-      calculateDaysRemaining,
-      buildGoogleCalendarUrl,
-      generateICalendarPayload
-    } from '../scripts/utils.js';
+    <script type="module">
+      import {
+        formatCurrency,
+        formatDate,
+        sanitizeHTML,
+        generateUUID,
+        calculateDaysRemaining,
+        buildGoogleCalendarUrl,
+        generateICalendarPayload
+      } from '../scripts/utils.js';
 
-    const resultsList = document.getElementById('test-results');
-    let passed = 0;
-    let failed = 0;
+      const resultsList = document.getElementById('test-results');
+      let passed = 0;
+      let failed = 0;
 
-    function record(name, condition) {
-      const li = document.createElement('li');
-      li.className = 'test-item';
-      li.innerHTML = `<span>${name}</span><span class="${condition ? 'badge-pass' : 'badge-fail'}">${condition ? 'PASS' : 'FAIL'}</span>`;
-      resultsList.appendChild(li);
-      if (condition) passed++; else failed++;
-    }
+      function record(name, condition) {
+        const li = document.createElement('li');
+        li.className = 'test-item';
+        li.innerHTML = `<span>${name}</span><span class="${condition ? 'badge-pass' : 'badge-fail'}">${condition ? 'PASS' : 'FAIL'}</span>`;
+        resultsList.appendChild(li);
+        if (condition) passed++; else failed++;
+      }
 
-    try {
-      record('formatCurrency($18,500)', formatCurrency(18500) === '$18,500');
-      record('formatCurrency($0)', formatCurrency(0) === '$0');
-      record('formatDate(valid ISO)', formatDate('2026-11-20').includes('Nov 20, 2026'));
-      record('formatDate(null)', formatDate(null) === 'Unscheduled');
-      record('sanitizeHTML(XSS check)', !sanitizeHTML('<script>alert(1)</script>').includes('<script>'));
-      record('generateUUID format check', /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(generateUUID()));
-      record('calculateDaysRemaining future check', calculateDaysRemaining('2027-01-01') > 0);
-      record('buildGoogleCalendarUrl format', buildGoogleCalendarUrl({ title: 'Test Event' }).includes('calendar.google.com'));
-      record('generateICalendarPayload RFC 5545', generateICalendarPayload({ name: 'Test', milestones: [] }).includes('BEGIN:VCALENDAR'));
+      try {
+        record('formatCurrency($18,500)', formatCurrency(18500) === '$18,500');
+        record('formatCurrency($0)', formatCurrency(0) === '$0');
+        record('formatDate(valid ISO)', formatDate('2026-11-20').includes('Nov 20, 2026'));
+        record('formatDate(null)', formatDate(null) === 'Unscheduled');
+        record('sanitizeHTML(XSS check)', !sanitizeHTML('<script>alert(1)
+    </script>
+    ').includes('
+    <script>
+      '));
+            record('generateUUID format check', /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(generateUUID()));
+            record('calculateDaysRemaining future check', calculateDaysRemaining('2027-01-01') > 0);
+            record('buildGoogleCalendarUrl format', buildGoogleCalendarUrl({ title: 'Test Event' }).includes('calendar.google.com'));
+            record('generateICalendarPayload RFC 5545', generateICalendarPayload({ name: 'Test', milestones: [] }).includes('BEGIN:VCALENDAR'));
 
-      // Functional Store Tests
-      const sampleEvent = {
-        id: 'evt-test-store',
-        name: 'Unit Gala',
-        budget: 10000,
-        expenses: [
-          { id: 'exp-1', estimated: 2000, actual: 2100 },
-          { id: 'exp-2', estimated: 3000, actual: 2800 }
-        ],
-        milestones: [
-          { id: 'ms-1', title: 'Task 1', completed: false }
-        ],
-        vendors: [
-          { id: 'v-1', name: 'Vendor 1', fee: 2800, status: 'Confirmed' }
-        ]
-      };
+            // Functional Store Tests
+            const sampleEvent = {
+              id: 'evt-test-store',
+              name: 'Unit Gala',
+              budget: 10000,
+              expenses: [
+                { id: 'exp-1', estimated: 2000, actual: 2100 },
+                { id: 'exp-2', estimated: 3000, actual: 2800 }
+              ],
+              milestones: [
+                { id: 'ms-1', title: 'Task 1', completed: false }
+              ],
+              vendors: [
+                { id: 'v-1', name: 'Vendor 1', fee: 2800, status: 'Confirmed' }
+              ]
+            };
 
-      const totalActual = sampleEvent.expenses.reduce((s, e) => s + (Number(e.actual) || 0), 0);
-      record('Budget Total Actual Spent Calculation ($4,900)', totalActual === 4900);
-      const remainingBudget = sampleEvent.budget - totalActual;
-      record('Budget Remaining Math ($5,100)', remainingBudget === 5100);
+            const totalActual = sampleEvent.expenses.reduce((s, e) => s + (Number(e.actual) || 0), 0);
+            record('Budget Total Actual Spent Calculation ($4,900)', totalActual === 4900);
+            const remainingBudget = sampleEvent.budget - totalActual;
+            record('Budget Remaining Math ($5,100)', remainingBudget === 5100);
 
-      // Milestone toggle verification
-      sampleEvent.milestones[0].completed = !sampleEvent.milestones[0].completed;
-      record('Milestone toggle state transition to true', sampleEvent.milestones[0].completed === true);
+            // Milestone toggle verification
+            sampleEvent.milestones[0].completed = !sampleEvent.milestones[0].completed;
+            record('Milestone toggle state transition to true', sampleEvent.milestones[0].completed === true);
 
-      // Vendor status update verification
-      sampleEvent.vendors[0].status = 'Contract Signed';
-      record('Vendor status update to Contract Signed', sampleEvent.vendors[0].status === 'Contract Signed');
+            // Vendor status update verification
+            sampleEvent.vendors[0].status = 'Contract Signed';
+            record('Vendor status update to Contract Signed', sampleEvent.vendors[0].status === 'Contract Signed');
 
-      // JSON Export/Import verification
-      const exportedJson = JSON.stringify([sampleEvent]);
-      const imported = JSON.parse(exportedJson);
-      record('JSON Backup export and re-import round-trip integrity', Array.isArray(imported) && imported[0].name === 'Unit Gala');
+            // JSON Export/Import verification
+            const exportedJson = JSON.stringify([sampleEvent]);
+            const imported = JSON.parse(exportedJson);
+            record('JSON Backup export and re-import round-trip integrity', Array.isArray(imported) && imported[0].name === 'Unit Gala');
 
-      const summary = document.getElementById('test-summary');
-      const badge = document.getElementById('overall-badge');
-      summary.textContent = `Completed ${passed + failed} tests | ${passed} passed | ${failed} failed`;
-      badge.textContent = failed === 0 ? 'ALL PASSED (100%)' : 'FAILURES DETECTED';
-      badge.style.color = failed === 0 ? '#10B981' : '#EF4444';
-    } catch (e) {
-      document.getElementById('test-summary').textContent = `Execution failed: ${e.message}`;
-    }
-  </script>
-</body>
+            const summary = document.getElementById('test-summary');
+            const badge = document.getElementById('overall-badge');
+            summary.textContent = `Completed ${passed + failed} tests | ${passed} passed | ${failed} failed`;
+            badge.textContent = failed === 0 ? 'ALL PASSED (100%)' : 'FAILURES DETECTED';
+            badge.style.color = failed === 0 ? '#10B981' : '#EF4444';
+          } catch (e) {
+            document.getElementById('test-summary').textContent = `Execution failed: ${e.message}`;
+          }
+    </script>
+  </body>
 </html>
-

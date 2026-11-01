@@ -168,7 +168,7 @@ export function generateUUID() {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID();
   }
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (character) => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, character => {
     const randomHex = Math.floor(Math.random() * 16);
     const value = character === 'x' ? randomHex : (randomHex & 0x3) | 0x8;
     return value.toString(16);
@@ -264,7 +264,7 @@ export function generateICalendarPayload(eventData) {
   ];
 
   const milestones = Array.isArray(eventData.milestones) ? eventData.milestones : [];
-  milestones.forEach((item) => {
+  milestones.forEach(item => {
     const itemDate = item.date ? new Date(item.date) : new Date();
     const endDate = new Date(itemDate.getTime() + 3600 * MS_PER_SECOND);
     lines.push(
@@ -374,16 +374,23 @@ function normalizeThemes(rawThemes, eventType = 'Celebration') {
     return rawThemes.map((t, idx) => ({
       id: t.id || `theme-${idx + 1}`,
       title: typeof t.title === 'string' ? t.title : `${eventType} Theme Concept`,
-      concept: typeof t.concept === 'string' ? t.concept : 'Curated celebration aesthetic and ambiance.',
-      decorPalette: Array.isArray(t.decorPalette) ? t.decorPalette : ['#0F172A', '#D97706', '#FAF8F5'],
-      budgetTip: typeof t.budgetTip === 'string' ? t.budgetTip : 'Optimize vendor contract terms to control costs.'
+      concept:
+        typeof t.concept === 'string' ? t.concept : 'Curated celebration aesthetic and ambiance.',
+      decorPalette: Array.isArray(t.decorPalette)
+        ? t.decorPalette
+        : ['#0F172A', '#D97706', '#FAF8F5'],
+      budgetTip:
+        typeof t.budgetTip === 'string'
+          ? t.budgetTip
+          : 'Optimize vendor contract terms to control costs.'
     }));
   }
   return [
     {
       id: 'theme-1',
       title: `${eventType} Atelier Elegance`,
-      concept: 'Refined architectural lighting, bespoke floral installations, and acoustic soundscapes.',
+      concept:
+        'Refined architectural lighting, bespoke floral installations, and acoustic soundscapes.',
       decorPalette: ['#0F172A', '#D97706', '#FAF8F5'],
       budgetTip: 'Allocate 40% to catering and 20% to decor to maximize guest impact.'
     }
@@ -397,7 +404,11 @@ function normalizeThemes(rawThemes, eventType = 'Celebration') {
  * @param {string} [eventType='Celebration'] - Celebration type.
  * @returns {Array<Object>} Normalized allocations list.
  */
-function normalizeBudgetAllocations(rawAllocations, eventBudget = 20000, eventType = 'Celebration') {
+function normalizeBudgetAllocations(
+  rawAllocations,
+  eventBudget = 20000,
+  eventType = 'Celebration'
+) {
   if (Array.isArray(rawAllocations) && rawAllocations.length > 0) {
     return rawAllocations.map((b, idx) => ({
       id: b.id || `ai-budget-${idx + 1}`,
@@ -409,10 +420,38 @@ function normalizeBudgetAllocations(rawAllocations, eventBudget = 20000, eventTy
     }));
   }
   return [
-    { id: 'ai-budget-1', category: 'Catering', item: `${eventType} Plated Dinner & Beverage`, cost: Math.round(eventBudget * 0.40), notes: 'Reception dinner service and table hospitality', selected: true },
-    { id: 'ai-budget-2', category: 'Decor', item: 'Floral Installations & Ambient Lighting', cost: Math.round(eventBudget * 0.20), notes: 'Table runners, floral centerpieces, and uplighting', selected: true },
-    { id: 'ai-budget-3', category: 'Entertainment', item: 'Live Performance & Audio Engineering', cost: Math.round(eventBudget * 0.15), notes: 'Sound equipment checkout and live performance', selected: true },
-    { id: 'ai-budget-4', category: 'Photography', item: 'Fine Art Celebration Photography', cost: Math.round(eventBudget * 0.15), notes: 'Complete event documentary coverage', selected: true }
+    {
+      id: 'ai-budget-1',
+      category: 'Catering',
+      item: `${eventType} Plated Dinner & Beverage`,
+      cost: Math.round(eventBudget * 0.4),
+      notes: 'Reception dinner service and table hospitality',
+      selected: true
+    },
+    {
+      id: 'ai-budget-2',
+      category: 'Decor',
+      item: 'Floral Installations & Ambient Lighting',
+      cost: Math.round(eventBudget * 0.2),
+      notes: 'Table runners, floral centerpieces, and uplighting',
+      selected: true
+    },
+    {
+      id: 'ai-budget-3',
+      category: 'Entertainment',
+      item: 'Live Performance & Audio Engineering',
+      cost: Math.round(eventBudget * 0.15),
+      notes: 'Sound equipment checkout and live performance',
+      selected: true
+    },
+    {
+      id: 'ai-budget-4',
+      category: 'Photography',
+      item: 'Fine Art Celebration Photography',
+      cost: Math.round(eventBudget * 0.15),
+      notes: 'Complete event documentary coverage',
+      selected: true
+    }
   ];
 }
 
@@ -427,7 +466,7 @@ function normalizeMilestones(rawMilestones, timelineRecs) {
     return rawMilestones.map((m, idx) => ({
       id: m.id || `ai-ms-${idx + 1}`,
       title: m.title || `Milestone Phase ${idx + 1}`,
-      offsetDays: typeof m.offsetDays === 'number' ? m.offsetDays : (-60 + idx * 25),
+      offsetDays: typeof m.offsetDays === 'number' ? m.offsetDays : -60 + idx * 25,
       phase: m.phase || (idx === 0 ? 'Planning' : idx === 1 ? 'Preparation' : 'Execution'),
       notes: m.notes || 'Suggested by Gemini AI Atelier',
       selected: true
@@ -436,7 +475,9 @@ function normalizeMilestones(rawMilestones, timelineRecs) {
   if (Array.isArray(timelineRecs) && timelineRecs.length > 0) {
     return timelineRecs.map((line, idx) => ({
       id: `ai-ms-${idx + 1}`,
-      title: String(line).replace(/^[-*•\d.]+\s*/, '').slice(0, 80),
+      title: String(line)
+        .replace(/^[-*•\d.]+\s*/, '')
+        .slice(0, 80),
       offsetDays: idx === 0 ? -60 : idx === 1 ? -30 : idx === 2 ? -7 : 0,
       phase: idx === 0 ? 'Planning' : idx === 1 ? 'Preparation' : 'Execution',
       notes: String(line),
@@ -444,10 +485,38 @@ function normalizeMilestones(rawMilestones, timelineRecs) {
     }));
   }
   return [
-    { id: 'ai-ms-1', title: 'Lock Venue & Catering Contracts', offsetDays: -90, phase: 'Planning', notes: 'Confirm venue holds, security deposit, and dietary guidelines', selected: true },
-    { id: 'ai-ms-2', title: 'Finalize Decor, Florals & Layout', offsetDays: -30, phase: 'Preparation', notes: 'Approve centerpiece proofs, table linens, and lighting schemes', selected: true },
-    { id: 'ai-ms-3', title: 'Vendor Load-In & Audio Sound Check', offsetDays: -7, phase: 'Execution', notes: 'Verify electrical capacity and vendor arrival schedule', selected: true },
-    { id: 'ai-ms-4', title: 'Celebration Reception & Gala Toast', offsetDays: 0, phase: 'Day of', notes: 'Execute run-of-show timeline, welcome speech, and toast', selected: true }
+    {
+      id: 'ai-ms-1',
+      title: 'Lock Venue & Catering Contracts',
+      offsetDays: -90,
+      phase: 'Planning',
+      notes: 'Confirm venue holds, security deposit, and dietary guidelines',
+      selected: true
+    },
+    {
+      id: 'ai-ms-2',
+      title: 'Finalize Decor, Florals & Layout',
+      offsetDays: -30,
+      phase: 'Preparation',
+      notes: 'Approve centerpiece proofs, table linens, and lighting schemes',
+      selected: true
+    },
+    {
+      id: 'ai-ms-3',
+      title: 'Vendor Load-In & Audio Sound Check',
+      offsetDays: -7,
+      phase: 'Execution',
+      notes: 'Verify electrical capacity and vendor arrival schedule',
+      selected: true
+    },
+    {
+      id: 'ai-ms-4',
+      title: 'Celebration Reception & Gala Toast',
+      offsetDays: 0,
+      phase: 'Day of',
+      notes: 'Execute run-of-show timeline, welcome speech, and toast',
+      selected: true
+    }
   ];
 }
 
@@ -459,21 +528,47 @@ function normalizeMilestones(rawMilestones, timelineRecs) {
  * @param {Array<string>} [vendorQuestions] - Vendor questions.
  * @returns {Array<Object>} Normalized vendors list.
  */
-function normalizeVendors(rawVendors, eventBudget = 20000, eventType = 'Celebration', vendorQuestions = []) {
+function normalizeVendors(
+  rawVendors,
+  eventBudget = 20000,
+  eventType = 'Celebration',
+  vendorQuestions = []
+) {
   if (Array.isArray(rawVendors) && rawVendors.length > 0) {
     return rawVendors.map((v, idx) => ({
       id: v.id || `ai-ven-${idx + 1}`,
       category: v.category || 'Catering',
       name: v.name || `${eventType} Vendor Partner ${idx + 1}`,
       fee: Number(v.fee) > 0 ? Number(v.fee) : Math.round(eventBudget * 0.2),
-      notes: v.notes || (vendorQuestions[idx] || 'Recommended by Gemini AI'),
+      notes: v.notes || vendorQuestions[idx] || 'Recommended by Gemini AI',
       selected: true
     }));
   }
   return [
-    { id: 'ai-ven-1', category: 'Catering', name: 'Artisan Culinary & Hospitality', fee: Math.round(eventBudget * 0.40), notes: vendorQuestions[0] || 'Inquire: What setup/breakdown window is included in quote?', selected: true },
-    { id: 'ai-ven-2', category: 'Decor', name: 'Lumière Floral & Event Styling', fee: Math.round(eventBudget * 0.20), notes: vendorQuestions[1] || 'Inquire: Are strikes and delivery included in quote?', selected: true },
-    { id: 'ai-ven-3', category: 'Photography', name: 'Aura Documentary Studio', fee: Math.round(eventBudget * 0.15), notes: vendorQuestions[2] || 'Inquire: What is the delivery turnaround for high-res images?', selected: true }
+    {
+      id: 'ai-ven-1',
+      category: 'Catering',
+      name: 'Artisan Culinary & Hospitality',
+      fee: Math.round(eventBudget * 0.4),
+      notes: vendorQuestions[0] || 'Inquire: What setup/breakdown window is included in quote?',
+      selected: true
+    },
+    {
+      id: 'ai-ven-2',
+      category: 'Decor',
+      name: 'Lumière Floral & Event Styling',
+      fee: Math.round(eventBudget * 0.2),
+      notes: vendorQuestions[1] || 'Inquire: Are strikes and delivery included in quote?',
+      selected: true
+    },
+    {
+      id: 'ai-ven-3',
+      category: 'Photography',
+      name: 'Aura Documentary Studio',
+      fee: Math.round(eventBudget * 0.15),
+      notes: vendorQuestions[2] || 'Inquire: What is the delivery turnaround for high-res images?',
+      selected: true
+    }
   ];
 }
 
@@ -486,14 +581,26 @@ function normalizeVendors(rawVendors, eventBudget = 20000, eventType = 'Celebrat
  */
 export function normalizeAIPlan(rawPlan, activeEvent = {}) {
   const plan = rawPlan && typeof rawPlan === 'object' ? rawPlan : {};
-  const safeEvent = (activeEvent && typeof activeEvent === 'object') ? activeEvent : {};
+  const safeEvent = activeEvent && typeof activeEvent === 'object' ? activeEvent : {};
   const eventBudget = Number(safeEvent.budget) || APP_CONFIG.LIMITS.DEFAULT_BUDGET;
   const eventType = safeEvent.type || 'Celebration';
 
   const themes = normalizeThemes(plan.themes, eventType);
-  const budgetAllocations = normalizeBudgetAllocations(plan.budgetAllocations, eventBudget, eventType);
-  const suggestedMilestones = normalizeMilestones(plan.suggestedMilestones, plan.timelineRecommendation);
-  const suggestedVendors = normalizeVendors(plan.suggestedVendors, eventBudget, eventType, plan.vendorQuestions);
+  const budgetAllocations = normalizeBudgetAllocations(
+    plan.budgetAllocations,
+    eventBudget,
+    eventType
+  );
+  const suggestedMilestones = normalizeMilestones(
+    plan.suggestedMilestones,
+    plan.timelineRecommendation
+  );
+  const suggestedVendors = normalizeVendors(
+    plan.suggestedVendors,
+    eventBudget,
+    eventType,
+    plan.vendorQuestions
+  );
 
   return {
     id: plan.id || generateUUID(),
@@ -516,11 +623,15 @@ export function normalizeAIPlan(rawPlan, activeEvent = {}) {
  * @param {Document|HTMLElement} [rootNode=document] - Root DOM document or container.
  * @returns {{ days: number, hours: number, minutes: number, seconds: number, isPast: boolean }} Countdown result.
  */
-export function renderCountdownDisplay(targetDateISO, rootNode = (typeof document !== 'undefined' ? document : null)) {
+export function renderCountdownDisplay(
+  targetDateISO,
+  rootNode = typeof document !== 'undefined' ? document : null
+) {
   const countdown = calculateDetailedCountdown(targetDateISO);
   if (!rootNode) return countdown;
 
-  const findNode = (id) => (rootNode.getElementById ? rootNode.getElementById(id) : rootNode.querySelector?.(`#${id}`));
+  const findNode = id =>
+    rootNode.getElementById ? rootNode.getElementById(id) : rootNode.querySelector?.(`#${id}`);
   const cdDays = findNode('countdown-days');
   const cdHours = findNode('countdown-hours');
   const cdMins = findNode('countdown-mins');
@@ -554,10 +665,12 @@ export function renderCountdownDisplay(targetDateISO, rootNode = (typeof documen
  */
 function applyBudgetItems(celebration, candidates, idGen) {
   const existingExpenses = new Set(
-    celebration.expenses.map((e) => (e.description || e.item || '').toLowerCase().trim()).filter(Boolean)
+    celebration.expenses
+      .map(e => (e.description || e.item || '').toLowerCase().trim())
+      .filter(Boolean)
   );
   let count = 0;
-  candidates.forEach((item) => {
+  candidates.forEach(item => {
     const itemDesc = (item.description || item.item || '').trim();
     const descKey = itemDesc.toLowerCase();
     if (descKey && !existingExpenses.has(descKey)) {
@@ -586,10 +699,10 @@ function applyBudgetItems(celebration, candidates, idGen) {
  */
 function applyMilestoneItems(celebration, candidates, idGen, dateCalc) {
   const existingMilestones = new Set(
-    celebration.milestones.map((m) => (m.title || '').toLowerCase().trim()).filter(Boolean)
+    celebration.milestones.map(m => (m.title || '').toLowerCase().trim()).filter(Boolean)
   );
   let count = 0;
-  candidates.forEach((m) => {
+  candidates.forEach(m => {
     const title = (m.title || '').trim();
     const titleKey = title.toLowerCase();
     if (titleKey && !existingMilestones.has(titleKey)) {
@@ -619,10 +732,10 @@ function applyMilestoneItems(celebration, candidates, idGen, dateCalc) {
  */
 function applyVendorItems(celebration, candidates, idGen) {
   const existingVendors = new Set(
-    celebration.vendors.map((v) => (v.name || '').toLowerCase().trim()).filter(Boolean)
+    celebration.vendors.map(v => (v.name || '').toLowerCase().trim()).filter(Boolean)
   );
   let count = 0;
-  candidates.forEach((v) => {
+  candidates.forEach(v => {
     const name = (v.name || '').trim();
     const nameKey = name.toLowerCase();
     if (nameKey && !existingVendors.has(nameKey)) {

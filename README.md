@@ -2,362 +2,223 @@
 
 **Plan meaningful celebrations. Manage every detail. Bring your vision to life.**
 
-AuraEvent is an AI-powered celebration and event planning platform designed to simplify the process of organizing weddings, birthdays, corporate events, community gatherings, and other special occasions.
-
-It combines intelligent event inspiration with practical planning tools, allowing users to manage budgets, coordinate vendors, organize event timelines, and develop personalized celebration concepts in one workspace.
-
-Powered by Google Gemini, AuraEvent transforms event planning from a collection of disconnected tasks into a structured and personalized experience.
+AuraEvent is an enterprise-grade celebration and event planning platform designed for weddings, milestone birthdays, corporate galas, and community festivals. Built on the refined **Atelier Chroniqueur** design language, it bridges creative inspiration with strict operational rigor — combining dynamic budget allocation, chronological run-of-show milestone ribbons, vendor registries, calendar synchronization, and Google Gemini generative AI in a single, zero-build web platform.
 
 ---
 
-## Application Preview
+## Visual Showcase
 
-### Overview Dashboard
+### Overview & Readiness Dashboard
 
-The central workspace provides an at-a-glance view of the active celebration, including budget allocation, countdown, vendor progress, upcoming milestones, and overall event readiness.
+The central command surface provides an at-a-glance operational overview: live countdown clock, target budget ceiling, committed spend, remaining balance, vendor contract statuses, upcoming milestones, and the composite Event Readiness Index.
 
-![AuraEvent Overview](screenshots/desktop-01-overview-wedding.png)
+![AuraEvent Overview](docs/screenshots/desktop-01-overview-wedding.png)
 
-### Create Celebration Workspace
+### Multi-Event Workspace Creator
 
-Create independent workspaces for different celebrations, each with its own event details, budget, guest count, currency preference, and aesthetic vision.
+Easily create and switch between isolated celebration workspaces, each retaining its own budget, guest count, currency preference, vendor roster, and aesthetic vision.
 
-![Create Celebration](screenshots/desktop-02-new-celebration-modal.png)
+![Create Celebration Modal](docs/screenshots/desktop-02-new-celebration-modal.png)
 
----
+### Budget & Expense Ledger
 
-## Features
+Track planned vs. actual expenses across categorized line items (Venue, Catering, Decor, Photography, Entertainment, etc.) with real-time variance detection, per-guest financial math, and currency support for USD and INR.
 
-### 1. Celebration Workspace Management
-- Create and manage multiple celebrations independently.
-- Support for weddings, birthdays, corporate galas, community festivals, and engagements or anniversaries.
-- Maintain separate budgets, vendors, milestones, and planning information for each event.
-- Apply event-specific visual themes and colour identities.
-- Track upcoming celebrations through a live countdown.
+![Budget & Expense Ledger](docs/screenshots/desktop-03-budget-expenses.png)
 
-### 2. Budget and Expense Management
-- Define a target budget for each celebration.
-- Organize expenses by categories.
-- Track estimated and actual expenditure.
-- Monitor allocated amounts and remaining balances.
-- Visualize category-wise spending distribution.
-- Identify budget overruns and financial variances.
-- Support multiple currency preferences, including INR.
+### Run-of-Show Chrono-Ribbon & Google Calendar Sync
 
-![Budget Management](screenshots/desktop-03-budget-expenses.png)
+Organize activities chronologically across event phases (Planning, Preparation, Execution, Ceremony, Reception, Breakdown). Filter by phase, mark completion, and deep-link milestones directly into Google Calendar or download an RFC 5545 `.ics` calendar feed.
 
-### 3. Event Timeline Management
-- Organize event activities chronologically.
-- Create, edit, and remove milestones.
-- Categorize milestones into planning phases.
-- Track completion status.
-- Filter activities by event phase.
-- Generate Google Calendar links and export calendar events.
+![Run-of-Show Timeline](docs/screenshots/desktop-04-timeline.png)
 
-![Event Timeline](screenshots/desktop-04-timeline.png)
+### Vendor Registry & Deliverables Checklist
 
-### 4. Vendor and Checklist Management
-- Maintain a centralized vendor registry.
-- Organize vendors by service category.
-- Store vendor names, contact details, and quoted fees.
-- Track contract and booking statuses.
-- Manage vendor deliverables through interactive checklists.
-- Monitor vendor coordination progress.
+Manage contracts and contact information across booking stages (Researching, Quoted, Contract Sent, Confirmed, Completed) with interactive sub-task checklists that track deliverables up to event day.
 
-![Vendor Management](screenshots/desktop-05-vendors-checklist.png)
+![Vendor Registry](docs/screenshots/desktop-05-vendors-checklist.png)
 
-### 5. Gemini AI Inspiration Atelier
+### Google Gemini AI Inspiration Atelier
 
-The AI Inspiration Atelier uses Google Gemini to assist with creative event planning.
+Harness Google Gemini generative models (`gemini-3.8-flash` with multi-model fallback cascade) to generate tailored color palettes, decor concepts, budget allocations, run-of-show milestones, and strategic vendor questions.
 
-Users can provide:
-- Celebration type.
-- Desired theme or mood concept.
-- Atmosphere and overall vibe.
-- Estimated budget.
-- Guest count.
-
-The AI-assisted planning experience generates personalized event inspiration, including creative themes, colour palettes, vendor recommendations, and scheduling suggestions.
-
-Additional planning capabilities include:
-- Generate and regenerate event plans.
-- Review and edit generated recommendations.
-- Save generated plans.
-- Apply selected recommendations or an entire plan to an event workspace.
-- Preview proposed changes before applying them.
-- Detect potential duplicates when applying recommendations.
-
-![Gemini AI Inspiration Atelier](screenshots/desktop-06-gemini-ai-atelier.png)
-
-### 6. Event Readiness and Progress Tracking
-- Monitor overall celebration readiness.
-- Track milestone completion and vendor confirmations.
-- View upcoming milestones.
-- Monitor remaining budget.
-- Access important planning actions from the overview dashboard.
-
-### 7. Backup and Calendar Integration
-- Export celebration data as JSON backups.
-- Restore previously exported event data.
-- Generate Google Calendar event links.
-- Export calendar events using the ICS format.
+![Gemini AI Atelier](docs/screenshots/desktop-06-gemini-ai-atelier.png)
 
 ---
 
-## Event-Specific Visual Themes
+## Core Capabilities
 
-AuraEvent adapts its visual identity according to the type of celebration, creating a more personalized planning experience.
-
-| Event Type | Visual Direction |
-|---|---|
-| Wedding | Rose, burgundy, and elegant editorial styling |
-| Birthday | Vibrant violet and celebratory accents |
-| Corporate Event | Midnight blue and professional styling |
-| Community Event | Warm orange and earthy tones |
-| Engagement / Anniversary | Romantic and elegant styling |
-
-### Birthday Theme
-
-![Birthday Theme](screenshots/desktop-07-theme-birthday.png)
-
-### Corporate Event Theme
-
-![Corporate Theme](screenshots/desktop-08-theme-corporate.png)
-
-### Community Event Theme
-
-![Community Theme](screenshots/desktop-09-theme-community.png)
-
----
-
-## Responsive Design
-
-AuraEvent is designed to provide a consistent planning experience across desktop and tablet screen sizes.
-
-### Desktop
-
-The desktop interface provides a comprehensive workspace with dedicated planning modules and detailed financial information.
-
-### Tablet
-
-![Tablet Overview](screenshots/tablet-01-overview.png)
+1. **Multi-Event Workspace Isolation:** Create and switch seamlessly between celebrations with non-destructive local persistence (`localStorage`) and cryptographic remote synchronization (`/api/events/:id`).
+2. **Dynamic Financial Ledger:** Instant calculations of allocated amounts, actual spent, remaining headroom, and cost-per-guest with zero floating-point rounding errors.
+3. **Chronological Run-of-Show:** Milestone ribbon supporting phase filtering, live completion toggles, countdown calculations, and direct Google Calendar synchronization.
+4. **Vendor Directory & Tasks:** Comprehensive partner tracking with contract statuses, quotes, contact details, and actionable task checklists.
+5. **Gemini Multi-Tier AI Cascade:** Generates bespoke celebration proposals using `gemini-3.8-flash`, falling back to `gemini-3.6-flash`, `gemini-3-flash-preview`, and curated domain-expert offline plans if offline.
+6. **Plan Preview & Selective Merging:** Inspect AI recommendations, select individual line items, and merge them safely with duplicate detection that preserves existing data.
+7. **Readiness & Action Center:** Operational score synthesizing milestones, vendor confirmations, and budget health into a real-time progress gauge.
+8. **Data Portability:** Download calendar events as RFC 5545 `.ics` feeds, export complete celebrations to formatted JSON backups, and restore with schema validation.
 
 ---
 
 ## Technology Stack
 
-| Layer | Technologies |
-|---|---|
-| Frontend | HTML5, CSS3, JavaScript (ES2022) |
-| Backend | Node.js, Express.js |
-| AI Integration | Google Gemini API |
-| API Communication | REST APIs |
-| Development Environment | Google Antigravity |
-| Version Control | Git, GitHub |
-
----
-
-## Project Architecture
-
-AuraEvent follows a client-server architecture.
-
-```text
-                 AURAEVENT
-                     |
-          +----------+----------+
-          |                     |
-      Frontend               Backend
-          |                     |
-   HTML / CSS / JS         Node.js / Express
-          |                     |
-          |              Gemini Service
-          |                     |
-          |              Google Gemini API
-          |                     |
-          +----------+----------+
-                     |
-             AI-Generated Plans
-                     |
-           Event Planning Modules
-                     |
-       +-------------+-------------+
-       |             |             |
-     Budget       Timeline       Vendors
-       |             |             |
-       +-------------+-------------+
-                     |
-             Celebration Workspace
-```
-
----
-
-## Getting Started
-
-Follow these instructions to run AuraEvent locally.
-
-### Prerequisites
-
-- Node.js
-- npm
-- Git
-- A Google Gemini API key
-
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/Codernoob000/AuraEvent.git
-```
-
-### 2. Navigate to the Project Directory
-
-```bash
-cd AuraEvent
-```
-
-### 3. Install Dependencies
-
-```bash
-npm install
-```
-
-### 4. Configure Environment Variables
-
-Create a `.env` file in the project root.
-
-```env
-GEMINI_API_KEY=your_gemini_api_key
-```
-
-Replace the placeholder with your own Gemini API key.
-
-**Security:** Never commit your `.env` file or expose your API key in frontend code. The Gemini API key should remain on the backend.
-
-### 5. Start the Application
-
-```bash
-npm start
-```
-
-Open the application in your browser:
-
-```text
-http://localhost:3000
-```
-
----
-
-## Deployment on Render
-
-AuraEvent is pre-configured and fully verified for zero-config deployment on **[Render](https://render.com)**.
-
-### Option A — 1-Click Blueprint Deployment (Recommended)
-
-1. Connect your GitHub repository to Render.
-2. Select **New** &rarr; **Blueprint**.
-3. Choose your repository. Render will automatically detect `render.yaml`.
-4. Enter your `GEMINI_API_KEY` when prompted in the environment settings.
-5. Click **Apply**. Render will build and deploy the service automatically.
-
-### Option B — Manual Web Service Deployment
-
-1. On the Render Dashboard, click **New +** &rarr; **Web Service**.
-2. Connect your Git repository.
-3. Configure the service settings:
-   - **Name**: `auraevent-planner` (or your preferred name)
-   - **Environment / Runtime**: `Node`
-   - **Build Command**: `npm install && npm run build`
-   - **Start Command**: `npm start`
-   - **Plan**: `Free`
-   - **Health Check Path**: `/api/health`
-4. In the **Environment Variables** section, add:
-   - `NODE_ENV`: `production`
-   - `GEMINI_API_KEY`: *(Your Google AI Studio API key)*
-   - `GEMINI_MODEL`: `gemini-3.8-flash`
-5. Click **Create Web Service**. Render will provision your URL (e.g. `https://auraevent-planner.onrender.com`).
+- **Client Tier:** Semantic HTML5, CSS3 with centralized design tokens, vanilla ES2022 JavaScript modules. No bundler required for instantaneous loading and zero client supply-chain vulnerabilities.
+- **Server Tier:** Node.js (>=18), Express 5, Helmet HTTP security headers, express-rate-limit protection.
+- **Validation & Security:** Zod schema enforcement on all API routes, DOMPurify HTML sanitization, cryptographic owner tokens, parameterized lookup security.
+- **AI Integration:** Google Gemini REST API proxy with token quota budgeting and input sanitization.
+- **Tooling:** ESLint (flat config v10), Prettier code formatting, and native Node test runners.
 
 ---
 
 ## Project Structure
 
 ```text
-AuraEvent/
-│
-├── screenshots/          # Application screenshots
-├── scripts/              # Frontend JavaScript modules
-├── services/             # Backend services and AI integration
-├── styles/               # Stylesheets and design system
-├── tests/                # Automated and browser tests
-│
-├── index.html             # Application entry point
-├── server.js              # Express backend server
-├── package.json           # Dependencies and scripts
-├── .env.example           # Environment variable template
-├── .gitignore
-├── README.md
-│
-├── DESIGN.md
-├── DESIGN_SYSTEM.md
-├── ARCHITECTURE.md
-└── LICENSE
+challenge_5/
+├── docs/
+│   ├── ARCHITECTURE.md          # Complete architecture & subsystem specification
+│   ├── DESIGN.md                # Atelier Chroniqueur design tokens & typography
+│   └── screenshots/             # High-resolution UI captures (desktop, tablet, mobile)
+├── scripts/
+│   ├── app.js                   # Main application controller & state machine
+│   ├── api.js                   # Client REST API gateway with retry logic
+│   ├── config.js                # Shared configuration constants & limits
+│   ├── events-data.js           # Re-export hub for celebration data & persistence
+│   ├── events-seed.js           # Canonical seed templates & schema normalization
+│   ├── events-storage.js        # Browser localStorage persistence layer
+│   ├── modal-controller.js      # Modal re-export hub
+│   ├── types.js                 # JSDoc @typedef definitions for all data models
+│   ├── utils.js                 # Currency, dates, crypto, calendar & AI normalization
+│   ├── modals/                  # Modular dialog & form controllers
+│   │   ├── core.js              # Dialog opening, closing, and focus traps
+│   │   ├── export.js            # iCalendar export and JSON backup/restore
+│   │   ├── forms-celebrations.js# Celebration creation & detail edit forms
+│   │   ├── forms-expenses.js    # Expense creation & edit forms
+│   │   ├── forms-milestones.js  # Milestone creation & edit forms
+│   │   ├── forms-vendors.js     # Vendor registration & checklist forms
+│   │   ├── helpers.js           # Shared form action lifecycle runner
+│   │   └── index.js             # Modals orchestrator & barrel export
+│   └── renderers/               # Single-responsibility DOM renderers
+│       ├── ai-milestones.js     # AI suggested run-of-show milestones renderer
+│       ├── ai-results.js        # AI workshop allocations & coordinator
+│       ├── ai-themes.js         # AI themes, swatches & vendor questions
+│       ├── budget.js            # Budget KPIs, category gauges & expense table
+│       ├── index.js             # Renderers barrel export
+│       ├── overview.js          # Masthead metrics, overview cards & readiness center
+│       ├── plans.js             # Saved plans library & application preview modal
+│       ├── timeline.js          # Chrono-ribbon & Google Calendar deep links
+│       └── vendors.js           # Vendor table & deliverables checklist
+├── services/
+│   ├── curatedOfflinePlans.js   # Offline fallback plan templates & engine
+│   └── geminiService.js         # Multi-model Gemini cascade & rate limiter
+├── styles/
+│   └── main.css                 # CSS custom properties, responsive layout & components
+├── tests/
+│   ├── browser_verify.js        # In-browser DOM verification module
+│   ├── code_quality_check.js    # Static analysis (secrets, console, catches, imports)
+│   ├── e2e.test.js              # Comprehensive end-to-end acceptance suite (39 checks)
+│   ├── regression.test.js       # Refactoring regression test suite (31 checks)
+│   ├── run_tests.js             # Unit, security, and integration test runner (49 checks)
+│   └── test_suite.html          # Browser-based visual test runner
+├── .editorconfig                # Multi-editor whitespace & indentation standard
+├── .env.example                 # Environment variable templates
+├── .gitignore                   # Strict isolation of secrets & build artifacts
+├── .prettierignore              # Formatting ignores
+├── .prettierrc                  # Prettier formatting rules
+├── eslint.config.js             # ESLint flat config with recommended rules
+├── index.html                   # Semantic application shell & accessible markup
+├── LICENSE                      # MIT Open Source License
+├── package.json                 # Project manifest & npm scripts
+├── render.yaml                  # Infrastructure-as-code for Render deployment
+└── server.js                    # Secure Express backend proxy & static asset server
 ```
 
 ---
 
-## Testing
+## Getting Started
 
-Run the automated test suite:
+### Prerequisites
+
+- **Node.js** >= 18.0.0
+- **npm** >= 9.0.0
+
+### 1. Installation
+
+Clone the repository and install dependencies:
 
 ```bash
-npm test
+git clone https://github.com/your-username/auraevent.git
+cd auraevent
+npm install
 ```
 
-Run the project's lint checks:
+### 2. Configure Environment Variables
+
+Copy the example environment configuration:
 
 ```bash
-npm run lint
+cp .env.example .env
 ```
 
-The project also includes browser verification and responsive screenshot testing.
+Open `.env` and set your credentials:
+
+```env
+PORT=3000
+NODE_ENV=development
+# Optional: Provide Google Gemini API Key for live AI generation.
+# If omitted or quota exhausted, AuraEvent gracefully falls back to its offline engine.
+GEMINI_API_KEY=your_gemini_api_key_here
+```
+
+### 3. Run Application
+
+Start the local server:
+
+```bash
+npm start
+```
+
+For automatic reload during development:
+
+```bash
+npm run dev
+```
+
+Open your browser and navigate to `http://localhost:3000`.
 
 ---
 
-## Security Considerations
+## Verification & Quality Tooling
 
-- API credentials are managed through environment variables.
-- Gemini API requests are handled by the backend.
-- API keys must never be exposed in client-side JavaScript.
-- Environment files and sensitive credentials are excluded through `.gitignore`.
-- AI-generated recommendations are reviewed before being applied to existing event data.
+AuraEvent adheres to the highest code quality and testing standards:
 
----
-
-## Future Improvements
-
-Potential enhancements include:
-
-- User authentication and personalized accounts.
-- Cloud-based event data synchronization.
-- Collaborative planning with multiple event organizers.
-- Advanced vendor discovery and booking integrations.
-- Real-time notifications and deadline reminders.
-- AI-generated event moodboards and visual concepts.
-- Advanced analytics and budget forecasting.
-- Integration with additional calendar and productivity platforms.
+| Command                | Purpose                                                                              | Expected Result                          |
+| :--------------------- | :----------------------------------------------------------------------------------- | :--------------------------------------- |
+| `npm test`             | Executes static quality checks, unit tests, regression tests, and acceptance suites. | **124/124 tests pass (0 failures)**      |
+| `npm run lint`         | Runs ESLint across all JavaScript files with flat config.                            | **0 errors, 0 warnings**                 |
+| `npm run lint:fix`     | Automatically corrects fixable linting issues.                                       | Clean pass                               |
+| `npm run format`       | Formats all code, docs, and styles using Prettier.                                   | Applied cleanly                          |
+| `npm run format:check` | Validates that repository code adheres to Prettier formatting.                       | **All matched files use Prettier style** |
 
 ---
 
-## Project Status
+## Deployment on Render
 
-AuraEvent is an actively developed project. Its core celebration management, budget tracking, timeline planning, vendor coordination, and Gemini-powered inspiration workflows are implemented.
+The repository includes a ready-to-deploy `render.yaml` specification.
 
-Further improvements will focus on expanding integrations, collaboration, and the overall planning experience.
+### Deployment Steps:
+
+1. Connect your GitHub repository to [Render](https://render.com).
+2. Create a new **Web Service** or use **Blueprints** targeting `render.yaml`.
+3. Set the build and start commands:
+   - **Build Command:** `npm install`
+   - **Start Command:** `node server.js`
+4. Configure environment variables in the Render dashboard:
+   - `PORT`: `10000` (Render binds automatically)
+   - `NODE_ENV`: `production`
+   - `GEMINI_API_KEY`: _(Your Google Gemini API Key)_
+5. The service provides health check probes at both `/api/health` and `/health`.
 
 ---
 
 ## License
 
-This project is licensed under the MIT License. See the `LICENSE` file for details.
-
----
-
-**AuraEvent — Making every celebration easier to plan and more meaningful to experience.**
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.

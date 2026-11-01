@@ -11,9 +11,11 @@
     "start": "node server.js",
     "build": "node --check server.js services/geminiService.js",
     "dev": "node --watch server.js",
-    "test": "node tests/run_tests.js",
-    "lint": "node tests/code_quality_check.js && node --check server.js services/geminiService.js scripts/app.js scripts/modal-controller.js scripts/api.js scripts/utils.js scripts/events-data.js scripts/ui-renderers.js scripts/config.js",
-    "format": "node tests/code_quality_check.js"
+    "test": "node tests/code_quality_check.js && node tests/run_tests.js && node tests/regression.test.js && node tests/e2e.test.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "keywords": [
     "event-planner",
@@ -31,5 +33,11 @@
     "express-rate-limit": "7.2.0",
     "helmet": "7.1.0",
     "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.14.0",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.10"
   }
 }

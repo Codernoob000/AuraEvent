@@ -1,1273 +1,2196 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <!-- Rule 7: Restrictive Content Security Policy Meta Tag -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://calendar.google.com;">
-  <meta name="description" content="AuraEvent — High-Society Celebration & Event Planning Studio. AI-powered inspiration, live financial ledgers, chronological run-of-show ribbons, and vendor collaboration.">
-  <title>AuraEvent — Celebration &amp; Event Planner Studio</title>
-  
-  <link rel="stylesheet" href="styles/main.css">
-  <!-- DOMPurify for Bulletproof XSS Prevention (Rules 11 & 13) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.9/dompurify.min.js" defer></script>
-  <!-- Modular Application Scripts -->
-  <script type="module" src="scripts/app.js" defer></script>
-</head>
-<body data-event-type="Wedding">
-  <!-- WCAG 2.1 AA Skip to Content Link -->
-  <a href="#main-content" class="skip-link">Skip to main content</a>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <!-- Rule 7: Restrictive Content Security Policy Meta Tag -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://calendar.google.com;"
+    />
+    <meta
+      name="description"
+      content="AuraEvent — High-Society Celebration & Event Planning Studio. AI-powered inspiration, live financial ledgers, chronological run-of-show ribbons, and vendor collaboration."
+    />
+    <title>AuraEvent — Celebration &amp; Event Planner Studio</title>
 
-  <!-- Header & Brand Masthead -->
-  <header class="app-header" role="banner">
-    <div class="masthead-container">
-      <div class="brand-section">
-        <div class="brand-crest" aria-hidden="true">
-          <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-          </svg>
-        </div>
-        <div class="brand-identity">
-          <span class="brand-title">AuraEvent</span>
-          <span class="brand-subtitle">Celebration &amp; Event Planning Studio</span>
-        </div>
-      </div>
+    <link rel="stylesheet" href="styles/main.css" />
+    <!-- DOMPurify for Bulletproof XSS Prevention (Rules 11 & 13) -->
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.9/dompurify.min.js"
+      defer
+    ></script>
+    <!-- Modular Application Scripts -->
+    <script type="module" src="scripts/app.js" defer></script>
+  </head>
+  <body data-event-type="Wedding">
+    <!-- WCAG 2.1 AA Skip to Content Link -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
 
-      <div class="event-selector-bar">
-        <div class="active-event-identity">
-          <span id="nav-event-type-badge" class="badge badge-event-type">Wedding</span>
-          <label for="event-select-input" class="visually-hidden">Select Active Celebration Workspace</label>
-          <div class="select-wrapper">
-            <select id="event-select-input" class="event-select" aria-label="Current Celebration Workspace">
-              <!-- Populated dynamically via app.js -->
-            </select>
-            <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <polyline points="6 9 12 15 18 9"></polyline>
+    <!-- Header & Brand Masthead -->
+    <header class="app-header" role="banner">
+      <div class="masthead-container">
+        <div class="brand-section">
+          <div class="brand-crest" aria-hidden="true">
+            <svg
+              class="brand-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polygon
+                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+              ></polygon>
             </svg>
           </div>
-        </div>
-
-        <button type="button" id="btn-new-event" class="btn btn-studio-create btn-sm" aria-label="Create a new celebration workspace">
-          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
-          <span>New Celebration</span>
-        </button>
-      </div>
-
-      <div class="masthead-actions">
-        <button type="button" id="btn-open-sync" class="btn btn-header-action btn-sm" aria-label="Google Calendar and Export Options">
-          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-            <line x1="16" y1="2" x2="16" y2="6"></line>
-            <line x1="8" y1="2" x2="8" y2="6"></line>
-            <line x1="3" y1="10" x2="21" y2="10"></line>
-          </svg>
-          <span>Google Sync &amp; Export</span>
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <!-- Live Event Metrics Strip -->
-  <section class="metrics-strip" aria-label="Celebration Pulse">
-    <div class="metrics-container">
-      <div class="metric-item">
-        <span class="metric-label">Target Budget</span>
-        <span id="metric-target-budget" class="metric-value currency">$0</span>
-        <span id="metric-budget-variance" class="metric-subtext">On Target</span>
-      </div>
-      <div class="metric-item">
-        <span class="metric-label">Total Allocated</span>
-        <span id="metric-total-spent" class="metric-value currency">$0</span>
-        <span id="metric-spent-percent" class="metric-subtext">0% of budget</span>
-      </div>
-      <div class="metric-item">
-        <span class="metric-label">Days to Event</span>
-        <span id="metric-days-remaining" class="metric-value tabular-nums">0</span>
-        <span id="metric-event-date" class="metric-subtext">Date</span>
-      </div>
-      <div class="metric-item">
-        <span class="metric-label">Vendors &amp; Tasks</span>
-        <span id="metric-vendors-progress" class="metric-value tabular-nums">0 / 0</span>
-        <span id="metric-vendors-percent" class="metric-subtext">Confirmed</span>
-      </div>
-    </div>
-  </section>
-
-  <!-- Main Navigation Tabs -->
-  <nav class="navigation-bar" aria-label="Event Planning Modules">
-    <div class="nav-container" role="tablist">
-      <button type="button" class="nav-tab active" role="tab" id="tab-overview" aria-selected="true" aria-controls="panel-overview">
-        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <rect x="3" y="3" width="7" height="7"></rect>
-          <rect x="14" y="3" width="7" height="7"></rect>
-          <rect x="14" y="14" width="7" height="7"></rect>
-          <rect x="3" y="14" width="7" height="7"></rect>
-        </svg>
-        <span>Overview</span>
-      </button>
-
-      <button type="button" class="nav-tab" role="tab" id="tab-budget" aria-selected="false" aria-controls="panel-budget">
-        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <line x1="12" y1="1" x2="12" y2="23"></line>
-          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-        </svg>
-        <span>Budget &amp; Expenses</span>
-        <span class="tab-badge" id="badge-budget-count">0</span>
-      </button>
-
-      <button type="button" class="nav-tab" role="tab" id="tab-timeline" aria-selected="false" aria-controls="panel-timeline">
-        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <circle cx="12" cy="12" r="10"></circle>
-          <polyline points="12 6 12 12 16 14"></polyline>
-        </svg>
-        <span>Run-of-Show Timeline</span>
-        <span class="tab-badge" id="badge-timeline-count">0</span>
-      </button>
-
-      <button type="button" class="nav-tab" role="tab" id="tab-vendors" aria-selected="false" aria-controls="panel-vendors">
-        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-          <circle cx="9" cy="7" r="4"></circle>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-        </svg>
-        <span>Vendors &amp; Checklist</span>
-        <span class="tab-badge" id="badge-vendors-count">0</span>
-      </button>
-
-      <button type="button" class="nav-tab" role="tab" id="tab-ai-atelier" aria-selected="false" aria-controls="panel-ai-atelier">
-        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-        </svg>
-        <span>AI Inspiration Atelier</span>
-        <span class="badge badge-accent">Google Gemini</span>
-      </button>
-    </div>
-  </nav>
-
-  <!-- Main Content Canvas -->
-  <main id="main-content" class="main-canvas" role="main">
-
-    <!-- 1. OVERVIEW PANEL -->
-    <div id="panel-overview" class="tab-panel active" role="tabpanel" aria-labelledby="tab-overview">
-      
-      <!-- Dynamic Celebration Hero Cover Banner -->
-      <section class="celebration-hero-banner" aria-label="Celebration Showcase">
-        <div class="hero-cover-backdrop" aria-hidden="true"></div>
-        <div class="hero-content-wrapper">
-          <div class="hero-details">
-            <div class="hero-type-row">
-              <span id="hero-event-type-badge" class="hero-tag-badge">Wedding</span>
-              <span id="hero-countdown-summary" class="hero-countdown-pill">Approaching</span>
-            </div>
-            <h1 id="hero-event-title" class="hero-title">Maya &amp; Leo's Autumn Wedding</h1>
-            <p id="hero-event-subtitle" class="hero-subtitle">Editorial coordination desk for ceremony, reception, budget allocation, and vendor contracts.</p>
-            
-            <div class="hero-meta-strip">
-              <div class="hero-meta-item">
-                <svg class="hero-meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                  <line x1="16" y1="2" x2="16" y2="6"></line>
-                  <line x1="8" y1="2" x2="8" y2="6"></line>
-                  <line x1="3" y1="10" x2="21" y2="10"></line>
-                </svg>
-                <span id="hero-event-date" class="hero-meta-text">Fri, Nov 20, 2026</span>
-              </div>
-              <div class="hero-meta-item">
-                <svg class="hero-meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="9" cy="7" r="4"></circle>
-                </svg>
-                <span id="hero-event-guests" class="hero-meta-text">120 Guests</span>
-              </div>
-              <div class="hero-meta-item">
-                <svg class="hero-meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                  <line x1="12" y1="1" x2="12" y2="23"></line>
-                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                </svg>
-                <span id="hero-event-budget" class="hero-meta-text">$24,000 Budget</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Real-time Celebration Countdown Clock -->
-          <div class="hero-countdown-card" aria-label="Celebration Countdown">
-            <span class="countdown-heading">Countdown to Celebration</span>
-            <div id="hero-countdown-clock" class="countdown-grid">
-              <div class="countdown-slot">
-                <span id="countdown-days" class="countdown-number tabular-nums">00</span>
-                <span class="countdown-caption">Days</span>
-              </div>
-              <div class="countdown-separator" aria-hidden="true">:</div>
-              <div class="countdown-slot">
-                <span id="countdown-hours" class="countdown-number tabular-nums">00</span>
-                <span class="countdown-caption">Hours</span>
-              </div>
-              <div class="countdown-separator" aria-hidden="true">:</div>
-              <div class="countdown-slot">
-                <span id="countdown-mins" class="countdown-number tabular-nums">00</span>
-                <span class="countdown-caption">Mins</span>
-              </div>
-              <div class="countdown-separator" aria-hidden="true">:</div>
-              <div class="countdown-slot">
-                <span id="countdown-secs" class="countdown-number tabular-nums">00</span>
-                <span class="countdown-caption">Secs</span>
-              </div>
-            </div>
-            <div class="countdown-actions">
-              <button type="button" id="btn-quick-ai-ideas" class="btn btn-outline btn-sm">
-                <span>Ask Gemini for Ideas</span>
-              </button>
-              <button type="button" id="btn-hero-edit-event" class="btn btn-outline btn-sm">
-                <span>Edit Celebration</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <div class="dashboard-grid">
-        <!-- Left Column: Operations & Financials -->
-        <div class="grid-col-left">
-          <!-- Budget Allocation Health -->
-          <section class="surface-card" aria-labelledby="card-budget-health-heading">
-            <div class="surface-card-header">
-              <div class="card-title-group">
-                <h2 id="card-budget-health-heading" class="card-title">Budget Allocation Health</h2>
-                <span class="card-subtitle">Live committed expenditure vs planned ceiling</span>
-              </div>
-              <button type="button" class="btn btn-outline btn-sm btn-nav-to-budget">View Breakdown</button>
-            </div>
-            <div class="budget-progress-track" aria-hidden="true">
-              <div id="overview-budget-progress-fill" class="budget-progress-fill" style="width: 0%;"></div>
-            </div>
-            <div class="budget-summary-box">
-              <div class="budget-metric-card">
-                <span class="metric-label">Planned Ceiling</span>
-                <span id="overview-planned-ceiling" class="metric-value currency">$0</span>
-              </div>
-              <div class="budget-metric-card">
-                <span class="metric-label">Allocated Spend</span>
-                <span id="overview-allocated-spend" class="metric-value currency">$0</span>
-              </div>
-              <div class="budget-metric-card">
-                <span class="metric-label">Remaining Balance</span>
-                <span id="overview-remaining-balance" class="metric-value currency">$0</span>
-              </div>
-            </div>
-            <div id="overview-category-preview-list" class="category-chips-grid">
-              <!-- Dynamically populated category chips -->
-            </div>
-          </section>
-
-          <!-- Run-of-Show Milestones -->
-          <section class="surface-card" aria-labelledby="card-upcoming-milestones-heading">
-            <div class="surface-card-header">
-              <div class="card-title-group">
-                <h2 id="card-upcoming-milestones-heading" class="card-title">Upcoming Chrono Milestones</h2>
-                <span class="card-subtitle">Next chronological checkpoints for celebration readiness</span>
-              </div>
-              <button type="button" class="btn btn-outline btn-sm btn-nav-to-timeline">Full Timeline</button>
-            </div>
-            <div id="overview-milestones-list" class="timeline-ribbon">
-              <!-- Populated dynamically via ui-renderers.js -->
-            </div>
-          </section>
-        </div>
-
-        <!-- Right Column: Readiness Center & Vendor Roster -->
-        <div class="grid-col-right">
-          <!-- NEW: Event Readiness & Action Center (Replaces obsolete Gemini promo) -->
-          <section class="surface-card readiness-action-center" aria-labelledby="card-readiness-heading">
-            <div class="surface-card-header">
-              <div class="card-title-group">
-                <div class="readiness-header-row">
-                  <span class="readiness-crest" aria-hidden="true">⚜️</span>
-                  <h2 id="card-readiness-heading" class="card-title">Celebration Readiness &amp; Action Center</h2>
-                </div>
-                <span class="card-subtitle">Synthesized readiness score across budget, timeline, and vendors</span>
-              </div>
-              <span id="readiness-status-pill" class="badge badge-success">On Schedule</span>
-            </div>
-
-            <!-- Readiness Progress Gauge -->
-            <div class="readiness-score-display">
-              <div class="readiness-score-numbers">
-                <span id="readiness-pct-text" class="readiness-pct tabular-nums">0%</span>
-                <span class="readiness-pct-caption">Readiness Index</span>
-              </div>
-              <div class="readiness-progress-track" aria-hidden="true">
-                <div id="readiness-progress-fill" class="readiness-progress-fill" style="width: 0%;"></div>
-              </div>
-            </div>
-
-            <!-- Action Checklist & Strategic Status -->
-            <div class="readiness-checklist">
-              <div class="readiness-item" id="readiness-item-milestone">
-                <div class="readiness-item-icon" aria-hidden="true">⏱️</div>
-                <div class="readiness-item-body">
-                  <div class="readiness-item-title">Next Milestone</div>
-                  <div id="readiness-next-milestone" class="readiness-item-desc">Loading milestone status...</div>
-                </div>
-              </div>
-
-              <div class="readiness-item" id="readiness-item-vendor">
-                <div class="readiness-item-icon" aria-hidden="true">🤝</div>
-                <div class="readiness-item-body">
-                  <div class="readiness-item-title">Vendor Contracts</div>
-                  <div id="readiness-vendor-progress" class="readiness-item-desc">Loading contract status...</div>
-                </div>
-              </div>
-
-              <div class="readiness-item" id="readiness-item-budget">
-                <div class="readiness-item-icon" aria-hidden="true">⚖️</div>
-                <div class="readiness-item-body">
-                  <div class="readiness-item-title">Financial Health</div>
-                  <div id="readiness-budget-status" class="readiness-item-desc">Allocations within ceiling.</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Studio Action Bar -->
-            <div class="readiness-quick-actions">
-              <button type="button" id="btn-readiness-add-ms" class="btn btn-outline btn-sm">
-                <span>+ Milestone</span>
-              </button>
-              <button type="button" id="btn-readiness-add-exp" class="btn btn-outline btn-sm">
-                <span>+ Expense</span>
-              </button>
-              <button type="button" id="btn-launch-ai-workshop" class="btn btn-primary btn-sm">
-                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                </svg>
-                <span>Consult Gemini AI</span>
-              </button>
-            </div>
-          </section>
-
-          <!-- Vendor & Contract Roster -->
-          <section class="surface-card" aria-labelledby="card-vendor-health-heading">
-            <div class="surface-card-header">
-              <div class="card-title-group">
-                <h2 id="card-vendor-health-heading" class="card-title">Vendor &amp; Contract Roster</h2>
-                <span class="card-subtitle">Partner booking pipeline and contract statuses</span>
-              </div>
-              <button type="button" class="btn btn-outline btn-sm btn-nav-to-vendors">Manage Roster</button>
-            </div>
-            <div id="overview-vendors-list">
-              <!-- Populated dynamically -->
-            </div>
-          </section>
-        </div>
-      </div>
-    </div>
-
-    <!-- 2. BUDGET & EXPENSES PANEL -->
-    <div id="panel-budget" class="tab-panel" role="tabpanel" aria-labelledby="tab-budget">
-      <div class="panel-header">
-        <div>
-          <h2 class="panel-heading">Budget &amp; Expense Allocation</h2>
-          <p class="panel-description">Categorized financial accounting ensuring every expense adheres strictly to your celebration ceiling.</p>
-        </div>
-        <button type="button" id="btn-add-expense-modal" class="btn btn-primary btn-sm">
-          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
-          <span>Add Expense Item</span>
-        </button>
-      </div>
-
-      <!-- Over-budget alert banner (hidden when on track) -->
-      <div id="budget-overbudget-alert" class="budget-alert-banner hidden" role="alert">
-        <div class="alert-icon" aria-hidden="true">⚠️</div>
-        <div class="alert-body">
-          <strong>Over-Budget Warning:</strong> Actual commitments exceed your celebration budget target. Review line items below or reallocate contingency reserves.
-        </div>
-      </div>
-
-      <div class="surface-card">
-        <div class="surface-card-header">
-          <div class="card-title-group">
-            <h3 class="card-title">Financial Summary &amp; Per-Guest Analytics</h3>
-            <span class="card-subtitle">Comprehensive variance against target celebration ceiling</span>
-          </div>
-          <span id="budget-variance-pill" class="badge badge-success">On Budget</span>
-        </div>
-        <div class="budget-summary-box">
-          <div class="budget-metric-card">
-            <span class="metric-label">Target Ceiling</span>
-            <span id="budget-view-target" class="metric-value currency">$0</span>
-          </div>
-          <div class="budget-metric-card">
-            <span class="metric-label">Actual Committed</span>
-            <span id="budget-view-committed" class="metric-value currency">$0</span>
-          </div>
-          <div class="budget-metric-card">
-            <span class="metric-label">Cost per Guest</span>
-            <span id="budget-view-per-guest" class="metric-value currency">$0</span>
-          </div>
-          <div class="budget-metric-card">
-            <span class="metric-label">Net Variance</span>
-            <span id="budget-view-variance" class="metric-value currency">$0</span>
+          <div class="brand-identity">
+            <span class="brand-title">AuraEvent</span>
+            <span class="brand-subtitle">Celebration &amp; Event Planning Studio</span>
           </div>
         </div>
 
-        <!-- Category Progress Breakdown -->
-        <div class="category-distribution-section">
-          <h4 class="category-distribution-title">Category Spending Distribution</h4>
-          <div id="budget-category-bars" class="category-bars-grid">
-            <!-- Dynamically populated category distribution meters -->
+        <div class="event-selector-bar">
+          <div class="active-event-identity">
+            <span id="nav-event-type-badge" class="badge badge-event-type">Wedding</span>
+            <label for="event-select-input" class="visually-hidden"
+              >Select Active Celebration Workspace</label
+            >
+            <div class="select-wrapper">
+              <select
+                id="event-select-input"
+                class="event-select"
+                aria-label="Current Celebration Workspace"
+              >
+                <!-- Populated dynamically via app.js -->
+              </select>
+              <svg
+                class="select-arrow"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
           </div>
-        </div>
 
-        <div class="data-table-container">
-          <table class="data-table" aria-label="Detailed Expense Line Items">
-            <thead>
-              <tr>
-                <th scope="col">Category</th>
-                <th scope="col">Item Description</th>
-                <th scope="col">Estimated</th>
-                <th scope="col">Actual</th>
-                <th scope="col">Payment Status</th>
-                <th scope="col">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="budget-table-body">
-              <!-- Dynamically populated rows -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- 3. RUN-OF-SHOW TIMELINE PANEL -->
-    <div id="panel-timeline" class="tab-panel" role="tabpanel" aria-labelledby="tab-timeline">
-      <div class="panel-header">
-        <div>
-          <h2 class="panel-heading">Run-of-Show Chrono-Ribbon</h2>
-          <p class="panel-description">Chronological execution tracks from initial planning through day-of-event ceremony, reception, and teardown.</p>
-        </div>
-        <div class="panel-actions">
-          <button type="button" id="btn-add-milestone-modal" class="btn btn-primary btn-sm">
-            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <button
+            type="button"
+            id="btn-new-event"
+            class="btn btn-studio-create btn-sm"
+            aria-label="Create a new celebration workspace"
+          >
+            <svg
+              class="btn-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
               <line x1="12" y1="5" x2="12" y2="19"></line>
               <line x1="5" y1="12" x2="19" y2="12"></line>
             </svg>
-            <span>Add Milestone</span>
+            <span>New Celebration</span>
+          </button>
+        </div>
+
+        <div class="masthead-actions">
+          <button
+            type="button"
+            id="btn-open-sync"
+            class="btn btn-header-action btn-sm"
+            aria-label="Google Calendar and Export Options"
+          >
+            <svg
+              class="btn-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <span>Google Sync &amp; Export</span>
           </button>
         </div>
       </div>
+    </header>
 
-      <!-- Phase Filtering Ribbon -->
-      <div class="timeline-filter-strip" role="toolbar" aria-label="Filter timeline milestones by phase">
-        <button type="button" class="btn-timeline-filter active" data-phase="all">All Phases</button>
-        <button type="button" class="btn-timeline-filter" data-phase="Ideation">Planning &amp; Ideation</button>
-        <button type="button" class="btn-timeline-filter" data-phase="Vendor Booking">Vendor Booking</button>
-        <button type="button" class="btn-timeline-filter" data-phase="Ceremony">Ceremony &amp; Setup</button>
-        <button type="button" class="btn-timeline-filter" data-phase="Reception">Reception &amp; Party</button>
-        <button type="button" class="btn-timeline-filter" data-phase="Breakdown">Breakdown</button>
-      </div>
-
-      <div class="surface-card">
-        <div id="timeline-full-ribbon" class="timeline-ribbon">
-          <!-- Populated dynamically via app.js -->
+    <!-- Live Event Metrics Strip -->
+    <section class="metrics-strip" aria-label="Celebration Pulse">
+      <div class="metrics-container">
+        <div class="metric-item">
+          <span class="metric-label">Target Budget</span>
+          <span id="metric-target-budget" class="metric-value currency">$0</span>
+          <span id="metric-budget-variance" class="metric-subtext">On Target</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-label">Total Allocated</span>
+          <span id="metric-total-spent" class="metric-value currency">$0</span>
+          <span id="metric-spent-percent" class="metric-subtext">0% of budget</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-label">Days to Event</span>
+          <span id="metric-days-remaining" class="metric-value tabular-nums">0</span>
+          <span id="metric-event-date" class="metric-subtext">Date</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-label">Vendors &amp; Tasks</span>
+          <span id="metric-vendors-progress" class="metric-value tabular-nums">0 / 0</span>
+          <span id="metric-vendors-percent" class="metric-subtext">Confirmed</span>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- 4. VENDORS & CHECKLIST PANEL -->
-    <div id="panel-vendors" class="tab-panel" role="tabpanel" aria-labelledby="tab-vendors">
-      <div class="panel-header">
-        <div>
-          <h2 class="panel-heading">Vendor Registry &amp; Contract Checklist</h2>
-          <p class="panel-description">Coordinate catering, venue, audio, photography, and floral partners with status tracking and deliverables.</p>
-        </div>
-        <button type="button" id="btn-add-vendor-modal" class="btn btn-primary btn-sm">
-          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
+    <!-- Main Navigation Tabs -->
+    <nav class="navigation-bar" aria-label="Event Planning Modules">
+      <div class="nav-container" role="tablist">
+        <button
+          type="button"
+          class="nav-tab active"
+          role="tab"
+          id="tab-overview"
+          aria-selected="true"
+          aria-controls="panel-overview"
+        >
+          <svg
+            class="btn-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            aria-hidden="true"
+          >
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
           </svg>
-          <span>Add Vendor</span>
+          <span>Overview</span>
+        </button>
+
+        <button
+          type="button"
+          class="nav-tab"
+          role="tab"
+          id="tab-budget"
+          aria-selected="false"
+          aria-controls="panel-budget"
+        >
+          <svg
+            class="btn-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            aria-hidden="true"
+          >
+            <line x1="12" y1="1" x2="12" y2="23"></line>
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+          </svg>
+          <span>Budget &amp; Expenses</span>
+          <span class="tab-badge" id="badge-budget-count">0</span>
+        </button>
+
+        <button
+          type="button"
+          class="nav-tab"
+          role="tab"
+          id="tab-timeline"
+          aria-selected="false"
+          aria-controls="panel-timeline"
+        >
+          <svg
+            class="btn-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          <span>Run-of-Show Timeline</span>
+          <span class="tab-badge" id="badge-timeline-count">0</span>
+        </button>
+
+        <button
+          type="button"
+          class="nav-tab"
+          role="tab"
+          id="tab-vendors"
+          aria-selected="false"
+          aria-controls="panel-vendors"
+        >
+          <svg
+            class="btn-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            aria-hidden="true"
+          >
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+          <span>Vendors &amp; Checklist</span>
+          <span class="tab-badge" id="badge-vendors-count">0</span>
+        </button>
+
+        <button
+          type="button"
+          class="nav-tab"
+          role="tab"
+          id="tab-ai-atelier"
+          aria-selected="false"
+          aria-controls="panel-ai-atelier"
+        >
+          <svg
+            class="btn-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            aria-hidden="true"
+          >
+            <polygon
+              points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+            ></polygon>
+          </svg>
+          <span>AI Inspiration Atelier</span>
+          <span class="badge badge-accent">Google Gemini</span>
         </button>
       </div>
+    </nav>
 
-      <div class="surface-card">
-        <div class="data-table-container">
-          <table class="data-table" aria-label="Vendor Registry Directory">
-            <thead>
-              <tr>
-                <th scope="col">Category</th>
-                <th scope="col">Vendor Name</th>
-                <th scope="col">Contact</th>
-                <th scope="col">Quoted Fee</th>
-                <th scope="col">Contract Status</th>
-                <th scope="col">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="vendor-table-body">
-              <!-- Dynamically populated rows -->
-            </tbody>
-          </table>
+    <!-- Main Content Canvas -->
+    <main id="main-content" class="main-canvas" role="main">
+      <!-- 1. OVERVIEW PANEL -->
+      <div
+        id="panel-overview"
+        class="tab-panel active"
+        role="tabpanel"
+        aria-labelledby="tab-overview"
+      >
+        <!-- Dynamic Celebration Hero Cover Banner -->
+        <section class="celebration-hero-banner" aria-label="Celebration Showcase">
+          <div class="hero-cover-backdrop" aria-hidden="true"></div>
+          <div class="hero-content-wrapper">
+            <div class="hero-details">
+              <div class="hero-type-row">
+                <span id="hero-event-type-badge" class="hero-tag-badge">Wedding</span>
+                <span id="hero-countdown-summary" class="hero-countdown-pill">Approaching</span>
+              </div>
+              <h1 id="hero-event-title" class="hero-title">Maya &amp; Leo's Autumn Wedding</h1>
+              <p id="hero-event-subtitle" class="hero-subtitle">
+                Editorial coordination desk for ceremony, reception, budget allocation, and vendor
+                contracts.
+              </p>
+
+              <div class="hero-meta-strip">
+                <div class="hero-meta-item">
+                  <svg
+                    class="hero-meta-icon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    aria-hidden="true"
+                  >
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                  <span id="hero-event-date" class="hero-meta-text">Fri, Nov 20, 2026</span>
+                </div>
+                <div class="hero-meta-item">
+                  <svg
+                    class="hero-meta-icon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    aria-hidden="true"
+                  >
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                  </svg>
+                  <span id="hero-event-guests" class="hero-meta-text">120 Guests</span>
+                </div>
+                <div class="hero-meta-item">
+                  <svg
+                    class="hero-meta-icon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    aria-hidden="true"
+                  >
+                    <line x1="12" y1="1" x2="12" y2="23"></line>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                  </svg>
+                  <span id="hero-event-budget" class="hero-meta-text">$24,000 Budget</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Real-time Celebration Countdown Clock -->
+            <div class="hero-countdown-card" aria-label="Celebration Countdown">
+              <span class="countdown-heading">Countdown to Celebration</span>
+              <div id="hero-countdown-clock" class="countdown-grid">
+                <div class="countdown-slot">
+                  <span id="countdown-days" class="countdown-number tabular-nums">00</span>
+                  <span class="countdown-caption">Days</span>
+                </div>
+                <div class="countdown-separator" aria-hidden="true">:</div>
+                <div class="countdown-slot">
+                  <span id="countdown-hours" class="countdown-number tabular-nums">00</span>
+                  <span class="countdown-caption">Hours</span>
+                </div>
+                <div class="countdown-separator" aria-hidden="true">:</div>
+                <div class="countdown-slot">
+                  <span id="countdown-mins" class="countdown-number tabular-nums">00</span>
+                  <span class="countdown-caption">Mins</span>
+                </div>
+                <div class="countdown-separator" aria-hidden="true">:</div>
+                <div class="countdown-slot">
+                  <span id="countdown-secs" class="countdown-number tabular-nums">00</span>
+                  <span class="countdown-caption">Secs</span>
+                </div>
+              </div>
+              <div class="countdown-actions">
+                <button type="button" id="btn-quick-ai-ideas" class="btn btn-outline btn-sm">
+                  <span>Ask Gemini for Ideas</span>
+                </button>
+                <button type="button" id="btn-hero-edit-event" class="btn btn-outline btn-sm">
+                  <span>Edit Celebration</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="dashboard-grid">
+          <!-- Left Column: Operations & Financials -->
+          <div class="grid-col-left">
+            <!-- Budget Allocation Health -->
+            <section class="surface-card" aria-labelledby="card-budget-health-heading">
+              <div class="surface-card-header">
+                <div class="card-title-group">
+                  <h2 id="card-budget-health-heading" class="card-title">
+                    Budget Allocation Health
+                  </h2>
+                  <span class="card-subtitle">Live committed expenditure vs planned ceiling</span>
+                </div>
+                <button type="button" class="btn btn-outline btn-sm btn-nav-to-budget">
+                  View Breakdown
+                </button>
+              </div>
+              <div class="budget-progress-track" aria-hidden="true">
+                <div
+                  id="overview-budget-progress-fill"
+                  class="budget-progress-fill"
+                  style="width: 0%"
+                ></div>
+              </div>
+              <div class="budget-summary-box">
+                <div class="budget-metric-card">
+                  <span class="metric-label">Planned Ceiling</span>
+                  <span id="overview-planned-ceiling" class="metric-value currency">$0</span>
+                </div>
+                <div class="budget-metric-card">
+                  <span class="metric-label">Allocated Spend</span>
+                  <span id="overview-allocated-spend" class="metric-value currency">$0</span>
+                </div>
+                <div class="budget-metric-card">
+                  <span class="metric-label">Remaining Balance</span>
+                  <span id="overview-remaining-balance" class="metric-value currency">$0</span>
+                </div>
+              </div>
+              <div id="overview-category-preview-list" class="category-chips-grid">
+                <!-- Dynamically populated category chips -->
+              </div>
+            </section>
+
+            <!-- Run-of-Show Milestones -->
+            <section class="surface-card" aria-labelledby="card-upcoming-milestones-heading">
+              <div class="surface-card-header">
+                <div class="card-title-group">
+                  <h2 id="card-upcoming-milestones-heading" class="card-title">
+                    Upcoming Chrono Milestones
+                  </h2>
+                  <span class="card-subtitle"
+                    >Next chronological checkpoints for celebration readiness</span
+                  >
+                </div>
+                <button type="button" class="btn btn-outline btn-sm btn-nav-to-timeline">
+                  Full Timeline
+                </button>
+              </div>
+              <div id="overview-milestones-list" class="timeline-ribbon">
+                <!-- Populated dynamically via ui-renderers.js -->
+              </div>
+            </section>
+          </div>
+
+          <!-- Right Column: Readiness Center & Vendor Roster -->
+          <div class="grid-col-right">
+            <!-- NEW: Event Readiness & Action Center (Replaces obsolete Gemini promo) -->
+            <section
+              class="surface-card readiness-action-center"
+              aria-labelledby="card-readiness-heading"
+            >
+              <div class="surface-card-header">
+                <div class="card-title-group">
+                  <div class="readiness-header-row">
+                    <span class="readiness-crest" aria-hidden="true">⚜️</span>
+                    <h2 id="card-readiness-heading" class="card-title">
+                      Celebration Readiness &amp; Action Center
+                    </h2>
+                  </div>
+                  <span class="card-subtitle"
+                    >Synthesized readiness score across budget, timeline, and vendors</span
+                  >
+                </div>
+                <span id="readiness-status-pill" class="badge badge-success">On Schedule</span>
+              </div>
+
+              <!-- Readiness Progress Gauge -->
+              <div class="readiness-score-display">
+                <div class="readiness-score-numbers">
+                  <span id="readiness-pct-text" class="readiness-pct tabular-nums">0%</span>
+                  <span class="readiness-pct-caption">Readiness Index</span>
+                </div>
+                <div class="readiness-progress-track" aria-hidden="true">
+                  <div
+                    id="readiness-progress-fill"
+                    class="readiness-progress-fill"
+                    style="width: 0%"
+                  ></div>
+                </div>
+              </div>
+
+              <!-- Action Checklist & Strategic Status -->
+              <div class="readiness-checklist">
+                <div class="readiness-item" id="readiness-item-milestone">
+                  <div class="readiness-item-icon" aria-hidden="true">⏱️</div>
+                  <div class="readiness-item-body">
+                    <div class="readiness-item-title">Next Milestone</div>
+                    <div id="readiness-next-milestone" class="readiness-item-desc">
+                      Loading milestone status...
+                    </div>
+                  </div>
+                </div>
+
+                <div class="readiness-item" id="readiness-item-vendor">
+                  <div class="readiness-item-icon" aria-hidden="true">🤝</div>
+                  <div class="readiness-item-body">
+                    <div class="readiness-item-title">Vendor Contracts</div>
+                    <div id="readiness-vendor-progress" class="readiness-item-desc">
+                      Loading contract status...
+                    </div>
+                  </div>
+                </div>
+
+                <div class="readiness-item" id="readiness-item-budget">
+                  <div class="readiness-item-icon" aria-hidden="true">⚖️</div>
+                  <div class="readiness-item-body">
+                    <div class="readiness-item-title">Financial Health</div>
+                    <div id="readiness-budget-status" class="readiness-item-desc">
+                      Allocations within ceiling.
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Studio Action Bar -->
+              <div class="readiness-quick-actions">
+                <button type="button" id="btn-readiness-add-ms" class="btn btn-outline btn-sm">
+                  <span>+ Milestone</span>
+                </button>
+                <button type="button" id="btn-readiness-add-exp" class="btn btn-outline btn-sm">
+                  <span>+ Expense</span>
+                </button>
+                <button type="button" id="btn-launch-ai-workshop" class="btn btn-primary btn-sm">
+                  <svg
+                    class="btn-icon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    aria-hidden="true"
+                  >
+                    <polygon
+                      points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+                    ></polygon>
+                  </svg>
+                  <span>Consult Gemini AI</span>
+                </button>
+              </div>
+            </section>
+
+            <!-- Vendor & Contract Roster -->
+            <section class="surface-card" aria-labelledby="card-vendor-health-heading">
+              <div class="surface-card-header">
+                <div class="card-title-group">
+                  <h2 id="card-vendor-health-heading" class="card-title">
+                    Vendor &amp; Contract Roster
+                  </h2>
+                  <span class="card-subtitle">Partner booking pipeline and contract statuses</span>
+                </div>
+                <button type="button" class="btn btn-outline btn-sm btn-nav-to-vendors">
+                  Manage Roster
+                </button>
+              </div>
+              <div id="overview-vendors-list">
+                <!-- Populated dynamically -->
+              </div>
+            </section>
+          </div>
         </div>
       </div>
 
-      <!-- Vendor Contract & Deliverables Checklist -->
-      <section class="surface-card" style="margin-top: var(--space-4);" aria-labelledby="vendor-checklist-heading">
-        <div class="surface-card-header">
-          <div class="card-title-group">
-            <h3 id="vendor-checklist-heading" class="card-title">Vendor Contract &amp; Deliverables Checklist</h3>
-            <span class="card-subtitle">Actionable vendor deliverables, contract reviews, and deposit deadlines</span>
+      <!-- 2. BUDGET & EXPENSES PANEL -->
+      <div id="panel-budget" class="tab-panel" role="tabpanel" aria-labelledby="tab-budget">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-heading">Budget &amp; Expense Allocation</h2>
+            <p class="panel-description">
+              Categorized financial accounting ensuring every expense adheres strictly to your
+              celebration ceiling.
+            </p>
           </div>
-          <span id="vendor-checklist-counter" class="badge badge-info">0 / 0 Completed</span>
-        </div>
-        <form id="form-add-checklist-task" class="checklist-add-form" style="display: flex; gap: var(--space-2); margin-bottom: var(--space-3);">
-          <label for="input-checklist-task" class="visually-hidden">New Vendor Task</label>
-          <input type="text" id="input-checklist-task" class="form-input" placeholder="e.g. Confirm final guest count with Heritage Kitchen" required maxlength="140" style="flex: 1;">
-          <button type="submit" class="btn btn-primary btn-sm">Add Task</button>
-        </form>
-        <ul id="vendor-checklist-items" class="vendor-checklist-list" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--space-2);">
-          <!-- Dynamically populated checklist items -->
-        </ul>
-      </section>
-    </div>
-
-    <!-- 5. GENAI INSPIRATION ATELIER PANEL -->
-    <div id="panel-ai-atelier" class="tab-panel" role="tabpanel" aria-labelledby="tab-ai-atelier">
-      <div class="panel-header atelier-header-row">
-        <div>
-          <div class="atelier-title-group">
-            <span class="atelier-sparkle-icon" aria-hidden="true">✨</span>
-            <h2 class="panel-heading">Google Gemini Inspiration Atelier</h2>
-          </div>
-          <p class="panel-description">AI-assisted brainstorming engine generating personalized themes, color palettes, vendor questions, and schedule advice.</p>
-          <div id="ai-active-workspace-badge" class="ai-active-workspace-badge">
-            <span class="pulse-indicator" aria-hidden="true"></span>
-            <span>Active Celebration Workspace: <strong id="ai-workspace-event-name">Maya &amp; Leo's Autumn Wedding</strong> (<span id="ai-workspace-event-meta">Wedding · $24,000 · 120 guests</span>)</span>
-          </div>
-        </div>
-        <div class="atelier-header-actions">
-          <button type="button" id="btn-view-saved-plans" class="btn btn-secondary btn-sm" aria-label="View saved plans library">
-            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
-            <span>Saved Plans (<span id="saved-plans-count">0</span>)</span>
+          <button type="button" id="btn-add-expense-modal" class="btn btn-primary btn-sm">
+            <svg
+              class="btn-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>Add Expense Item</span>
           </button>
         </div>
-      </div>
 
-      <div class="dashboard-grid">
-        <!-- AI Input Parameters -->
-        <div class="grid-col-left">
-          <div class="surface-card ai-workshop-card">
-            <h3 class="card-title" style="margin-bottom: 1rem;">Personalize Event Brainstorming</h3>
-            <form id="form-ai-generator" novalidate>
-              <div class="form-group">
-                <label for="ai-event-type" class="form-label">Celebration Type</label>
-                <select id="ai-event-type" class="form-select">
-                  <option value="Wedding">Wedding</option>
-                  <option value="Birthday">Birthday</option>
-                  <option value="Corporate Event">Corporate Event / Gala</option>
-                  <option value="Community Event">Community Event / Gathering</option>
-                  <option value="Anniversary">Engagement / Anniversary</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label for="ai-theme-prompt" class="form-label">Desired Theme / Mood Concept</label>
-                <input type="text" id="ai-theme-prompt" class="form-input" placeholder="e.g. Vintage Italian Garden, 80s Disco, Rustic Autumn Harvest" maxlength="120" required>
-              </div>
-
-              <div class="form-group">
-                <label for="ai-vibe" class="form-label">Atmosphere &amp; Vibe</label>
-                <input type="text" id="ai-vibe" class="form-input" placeholder="e.g. Intimate, energetic, sophisticated, family-friendly" maxlength="80">
-              </div>
-
-              <div class="form-group">
-                <label for="ai-budget-input" class="form-label">Estimated Budget Ceiling ($)</label>
-                <input type="number" id="ai-budget-input" class="form-input" min="100" max="1000000" step="100" required>
-              </div>
-
-              <div class="form-group">
-                <label for="ai-guest-count" class="form-label">Estimated Guest Count</label>
-                <input type="number" id="ai-guest-count" class="form-input" min="1" max="10000" step="1" required>
-              </div>
-
-              <button type="submit" id="btn-generate-ai" class="btn btn-primary" style="width: 100%;">
-                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                </svg>
-                <span>Generate Plan with Google Gemini</span>
-              </button>
-            </form>
+        <!-- Over-budget alert banner (hidden when on track) -->
+        <div id="budget-overbudget-alert" class="budget-alert-banner hidden" role="alert">
+          <div class="alert-icon" aria-hidden="true">⚠️</div>
+          <div class="alert-body">
+            <strong>Over-Budget Warning:</strong> Actual commitments exceed your celebration budget
+            target. Review line items below or reallocate contingency reserves.
           </div>
         </div>
 
-        <!-- AI Output Cards -->
-        <div class="grid-col-right">
-          <div class="surface-card">
-            <div class="ai-results-header-row" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;">
-              <h3 class="card-title" style="margin: 0;">Gemini Curated Inspiration</h3>
-              <div id="ai-plan-status-pill" class="badge badge-accent hidden">Plan Ready</div>
+        <div class="surface-card">
+          <div class="surface-card-header">
+            <div class="card-title-group">
+              <h3 class="card-title">Financial Summary &amp; Per-Guest Analytics</h3>
+              <span class="card-subtitle"
+                >Comprehensive variance against target celebration ceiling</span
+              >
             </div>
+            <span id="budget-variance-pill" class="badge badge-success">On Budget</span>
+          </div>
+          <div class="budget-summary-box">
+            <div class="budget-metric-card">
+              <span class="metric-label">Target Ceiling</span>
+              <span id="budget-view-target" class="metric-value currency">$0</span>
+            </div>
+            <div class="budget-metric-card">
+              <span class="metric-label">Actual Committed</span>
+              <span id="budget-view-committed" class="metric-value currency">$0</span>
+            </div>
+            <div class="budget-metric-card">
+              <span class="metric-label">Cost per Guest</span>
+              <span id="budget-view-per-guest" class="metric-value currency">$0</span>
+            </div>
+            <div class="budget-metric-card">
+              <span class="metric-label">Net Variance</span>
+              <span id="budget-view-variance" class="metric-value currency">$0</span>
+            </div>
+          </div>
 
-            <!-- AI Action Bar (Hidden when no plan is generated) -->
-            <div id="ai-plan-actions-bar" class="ai-plan-actions-bar hidden">
-              <div class="ai-plan-actions-info">
-                <span id="ai-plan-model-tag" class="badge badge-info" style="font-size: var(--text-xs);">gemini-3.8-flash</span>
-                <span id="ai-plan-timestamp" style="font-size: var(--text-xs); color: var(--color-text-secondary); margin-left: 0.5rem;"></span>
-              </div>
-              <div class="ai-plan-action-buttons">
-                <button type="button" id="btn-regenerate-ai-plan" class="btn btn-secondary btn-sm" title="Re-run Gemini generation with current settings">
-                  <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-                  <span>Regenerate</span>
-                </button>
-                <button type="button" id="btn-save-ai-plan" class="btn btn-secondary btn-sm" title="Save this plan without applying">
-                  <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-                  <span>Save Plan</span>
-                </button>
-                <button type="button" id="btn-apply-selected-plan" class="btn btn-secondary btn-sm" title="Apply checked recommendations to celebration">
-                  <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
-                  <span>Apply Selected...</span>
-                </button>
-                <button type="button" id="btn-apply-entire-plan" class="btn btn-primary btn-sm" title="Apply entire plan to celebration">
-                  <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                  <span>Apply Entire Plan</span>
-                </button>
-              </div>
+          <!-- Category Progress Breakdown -->
+          <div class="category-distribution-section">
+            <h4 class="category-distribution-title">Category Spending Distribution</h4>
+            <div id="budget-category-bars" class="category-bars-grid">
+              <!-- Dynamically populated category distribution meters -->
             </div>
+          </div>
 
-            <div id="ai-loading-indicator" class="loading-shimmer hidden" role="status" aria-live="polite">
-              <div class="ai-loading-content">
-                <div class="loading-spinner" aria-hidden="true"></div>
-                <span class="loading-text">Consulting Google Gemini AI Atelier...</span>
-              </div>
+          <div class="data-table-container">
+            <table class="data-table" aria-label="Detailed Expense Line Items">
+              <thead>
+                <tr>
+                  <th scope="col">Category</th>
+                  <th scope="col">Item Description</th>
+                  <th scope="col">Estimated</th>
+                  <th scope="col">Actual</th>
+                  <th scope="col">Payment Status</th>
+                  <th scope="col">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="budget-table-body">
+                <!-- Dynamically populated rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. RUN-OF-SHOW TIMELINE PANEL -->
+      <div id="panel-timeline" class="tab-panel" role="tabpanel" aria-labelledby="tab-timeline">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-heading">Run-of-Show Chrono-Ribbon</h2>
+            <p class="panel-description">
+              Chronological execution tracks from initial planning through day-of-event ceremony,
+              reception, and teardown.
+            </p>
+          </div>
+          <div class="panel-actions">
+            <button type="button" id="btn-add-milestone-modal" class="btn btn-primary btn-sm">
+              <svg
+                class="btn-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              <span>Add Milestone</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Phase Filtering Ribbon -->
+        <div
+          class="timeline-filter-strip"
+          role="toolbar"
+          aria-label="Filter timeline milestones by phase"
+        >
+          <button type="button" class="btn-timeline-filter active" data-phase="all">
+            All Phases
+          </button>
+          <button type="button" class="btn-timeline-filter" data-phase="Ideation">
+            Planning &amp; Ideation
+          </button>
+          <button type="button" class="btn-timeline-filter" data-phase="Vendor Booking">
+            Vendor Booking
+          </button>
+          <button type="button" class="btn-timeline-filter" data-phase="Ceremony">
+            Ceremony &amp; Setup
+          </button>
+          <button type="button" class="btn-timeline-filter" data-phase="Reception">
+            Reception &amp; Party
+          </button>
+          <button type="button" class="btn-timeline-filter" data-phase="Breakdown">
+            Breakdown
+          </button>
+        </div>
+
+        <div class="surface-card">
+          <div id="timeline-full-ribbon" class="timeline-ribbon">
+            <!-- Populated dynamically via app.js -->
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. VENDORS & CHECKLIST PANEL -->
+      <div id="panel-vendors" class="tab-panel" role="tabpanel" aria-labelledby="tab-vendors">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-heading">Vendor Registry &amp; Contract Checklist</h2>
+            <p class="panel-description">
+              Coordinate catering, venue, audio, photography, and floral partners with status
+              tracking and deliverables.
+            </p>
+          </div>
+          <button type="button" id="btn-add-vendor-modal" class="btn btn-primary btn-sm">
+            <svg
+              class="btn-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>Add Vendor</span>
+          </button>
+        </div>
+
+        <div class="surface-card">
+          <div class="data-table-container">
+            <table class="data-table" aria-label="Vendor Registry Directory">
+              <thead>
+                <tr>
+                  <th scope="col">Category</th>
+                  <th scope="col">Vendor Name</th>
+                  <th scope="col">Contact</th>
+                  <th scope="col">Quoted Fee</th>
+                  <th scope="col">Contract Status</th>
+                  <th scope="col">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="vendor-table-body">
+                <!-- Dynamically populated rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Vendor Contract & Deliverables Checklist -->
+        <section
+          class="surface-card"
+          style="margin-top: var(--space-4)"
+          aria-labelledby="vendor-checklist-heading"
+        >
+          <div class="surface-card-header">
+            <div class="card-title-group">
+              <h3 id="vendor-checklist-heading" class="card-title">
+                Vendor Contract &amp; Deliverables Checklist
+              </h3>
+              <span class="card-subtitle"
+                >Actionable vendor deliverables, contract reviews, and deposit deadlines</span
+              >
             </div>
-            <div id="ai-results-wrapper" class="ai-results-container">
-              <!-- Rendered themes and recommendations -->
+            <span id="vendor-checklist-counter" class="badge badge-info">0 / 0 Completed</span>
+          </div>
+          <form
+            id="form-add-checklist-task"
+            class="checklist-add-form"
+            style="display: flex; gap: var(--space-2); margin-bottom: var(--space-3)"
+          >
+            <label for="input-checklist-task" class="visually-hidden">New Vendor Task</label>
+            <input
+              type="text"
+              id="input-checklist-task"
+              class="form-input"
+              placeholder="e.g. Confirm final guest count with Heritage Kitchen"
+              required
+              maxlength="140"
+              style="flex: 1"
+            />
+            <button type="submit" class="btn btn-primary btn-sm">Add Task</button>
+          </form>
+          <ul
+            id="vendor-checklist-items"
+            class="vendor-checklist-list"
+            style="
+              list-style: none;
+              padding: 0;
+              margin: 0;
+              display: flex;
+              flex-direction: column;
+              gap: var(--space-2);
+            "
+          >
+            <!-- Dynamically populated checklist items -->
+          </ul>
+        </section>
+      </div>
+
+      <!-- 5. GENAI INSPIRATION ATELIER PANEL -->
+      <div id="panel-ai-atelier" class="tab-panel" role="tabpanel" aria-labelledby="tab-ai-atelier">
+        <div class="panel-header atelier-header-row">
+          <div>
+            <div class="atelier-title-group">
+              <span class="atelier-sparkle-icon" aria-hidden="true">✨</span>
+              <h2 class="panel-heading">Google Gemini Inspiration Atelier</h2>
+            </div>
+            <p class="panel-description">
+              AI-assisted brainstorming engine generating personalized themes, color palettes,
+              vendor questions, and schedule advice.
+            </p>
+            <div id="ai-active-workspace-badge" class="ai-active-workspace-badge">
+              <span class="pulse-indicator" aria-hidden="true"></span>
+              <span
+                >Active Celebration Workspace:
+                <strong id="ai-workspace-event-name">Maya &amp; Leo's Autumn Wedding</strong> (<span
+                  id="ai-workspace-event-meta"
+                  >Wedding · $24,000 · 120 guests</span
+                >)</span
+              >
+            </div>
+          </div>
+          <div class="atelier-header-actions">
+            <button
+              type="button"
+              id="btn-view-saved-plans"
+              class="btn btn-secondary btn-sm"
+              aria-label="View saved plans library"
+            >
+              <svg
+                class="btn-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <span>Saved Plans (<span id="saved-plans-count">0</span>)</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <!-- AI Input Parameters -->
+          <div class="grid-col-left">
+            <div class="surface-card ai-workshop-card">
+              <h3 class="card-title" style="margin-bottom: 1rem">
+                Personalize Event Brainstorming
+              </h3>
+              <form id="form-ai-generator" novalidate>
+                <div class="form-group">
+                  <label for="ai-event-type" class="form-label">Celebration Type</label>
+                  <select id="ai-event-type" class="form-select">
+                    <option value="Wedding">Wedding</option>
+                    <option value="Birthday">Birthday</option>
+                    <option value="Corporate Event">Corporate Event / Gala</option>
+                    <option value="Community Event">Community Event / Gathering</option>
+                    <option value="Anniversary">Engagement / Anniversary</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="ai-theme-prompt" class="form-label"
+                    >Desired Theme / Mood Concept</label
+                  >
+                  <input
+                    type="text"
+                    id="ai-theme-prompt"
+                    class="form-input"
+                    placeholder="e.g. Vintage Italian Garden, 80s Disco, Rustic Autumn Harvest"
+                    maxlength="120"
+                    required
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="ai-vibe" class="form-label">Atmosphere &amp; Vibe</label>
+                  <input
+                    type="text"
+                    id="ai-vibe"
+                    class="form-input"
+                    placeholder="e.g. Intimate, energetic, sophisticated, family-friendly"
+                    maxlength="80"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="ai-budget-input" class="form-label"
+                    >Estimated Budget Ceiling ($)</label
+                  >
+                  <input
+                    type="number"
+                    id="ai-budget-input"
+                    class="form-input"
+                    min="100"
+                    max="1000000"
+                    step="100"
+                    required
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="ai-guest-count" class="form-label">Estimated Guest Count</label>
+                  <input
+                    type="number"
+                    id="ai-guest-count"
+                    class="form-input"
+                    min="1"
+                    max="10000"
+                    step="1"
+                    required
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  id="btn-generate-ai"
+                  class="btn btn-primary"
+                  style="width: 100%"
+                >
+                  <svg
+                    class="btn-icon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    aria-hidden="true"
+                  >
+                    <polygon
+                      points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+                    ></polygon>
+                  </svg>
+                  <span>Generate Plan with Google Gemini</span>
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <!-- AI Output Cards -->
+          <div class="grid-col-right">
+            <div class="surface-card">
+              <div
+                class="ai-results-header-row"
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  flex-wrap: wrap;
+                  gap: 0.5rem;
+                  margin-bottom: 0.75rem;
+                "
+              >
+                <h3 class="card-title" style="margin: 0">Gemini Curated Inspiration</h3>
+                <div id="ai-plan-status-pill" class="badge badge-accent hidden">Plan Ready</div>
+              </div>
+
+              <!-- AI Action Bar (Hidden when no plan is generated) -->
+              <div id="ai-plan-actions-bar" class="ai-plan-actions-bar hidden">
+                <div class="ai-plan-actions-info">
+                  <span
+                    id="ai-plan-model-tag"
+                    class="badge badge-info"
+                    style="font-size: var(--text-xs)"
+                    >gemini-3.8-flash</span
+                  >
+                  <span
+                    id="ai-plan-timestamp"
+                    style="
+                      font-size: var(--text-xs);
+                      color: var(--color-text-secondary);
+                      margin-left: 0.5rem;
+                    "
+                  ></span>
+                </div>
+                <div class="ai-plan-action-buttons">
+                  <button
+                    type="button"
+                    id="btn-regenerate-ai-plan"
+                    class="btn btn-secondary btn-sm"
+                    title="Re-run Gemini generation with current settings"
+                  >
+                    <svg
+                      class="btn-icon"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      aria-hidden="true"
+                    >
+                      <polyline points="23 4 23 10 17 10"></polyline>
+                      <polyline points="1 20 1 14 7 14"></polyline>
+                      <path
+                        d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"
+                      ></path>
+                    </svg>
+                    <span>Regenerate</span>
+                  </button>
+                  <button
+                    type="button"
+                    id="btn-save-ai-plan"
+                    class="btn btn-secondary btn-sm"
+                    title="Save this plan without applying"
+                  >
+                    <svg
+                      class="btn-icon"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"
+                      ></path>
+                      <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                      <polyline points="7 3 7 8 15 8"></polyline>
+                    </svg>
+                    <span>Save Plan</span>
+                  </button>
+                  <button
+                    type="button"
+                    id="btn-apply-selected-plan"
+                    class="btn btn-secondary btn-sm"
+                    title="Apply checked recommendations to celebration"
+                  >
+                    <svg
+                      class="btn-icon"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      aria-hidden="true"
+                    >
+                      <path d="M9 11l3 3L22 4"></path>
+                      <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                    </svg>
+                    <span>Apply Selected...</span>
+                  </button>
+                  <button
+                    type="button"
+                    id="btn-apply-entire-plan"
+                    class="btn btn-primary btn-sm"
+                    title="Apply entire plan to celebration"
+                  >
+                    <svg
+                      class="btn-icon"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      aria-hidden="true"
+                    >
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                      <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    <span>Apply Entire Plan</span>
+                  </button>
+                </div>
+              </div>
+
+              <div
+                id="ai-loading-indicator"
+                class="loading-shimmer hidden"
+                role="status"
+                aria-live="polite"
+              >
+                <div class="ai-loading-content">
+                  <div class="loading-spinner" aria-hidden="true"></div>
+                  <span class="loading-text">Consulting Google Gemini AI Atelier...</span>
+                </div>
+              </div>
+              <div id="ai-results-wrapper" class="ai-results-container">
+                <!-- Rendered themes and recommendations -->
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </main>
 
-  </main>
-
-  <!-- ==========================================================================
+    <!-- ==========================================================================
        MODALS & DIALOGS
        ========================================================================== -->
 
-  <!-- 1. Add Expense Modal -->
-  <div id="modal-expense" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-expense-title">
-    <div class="modal-dialog">
-      <div class="modal-header">
-        <h3 id="modal-expense-title" class="modal-title">Add Expense Item</h3>
-        <button type="button" class="btn-close" id="btn-close-expense-modal" aria-label="Close dialog">&times;</button>
-      </div>
-      <form id="form-add-expense" novalidate>
-        <div class="form-group">
-          <label for="exp-category" class="form-label">Expense Category</label>
-          <select id="exp-category" class="form-select" required>
-            <option value="Venue">Venue</option>
-            <option value="Catering">Catering</option>
-            <option value="Photography">Photography &amp; Video</option>
-            <option value="Entertainment">Music &amp; Entertainment</option>
-            <option value="Decor">Decor &amp; Floral</option>
-            <option value="Stationery">Stationery &amp; Invites</option>
-            <option value="Contingency">Contingency Reserve</option>
-          </select>
+    <!-- 1. Add Expense Modal -->
+    <div
+      id="modal-expense"
+      class="modal-backdrop hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-expense-title"
+    >
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h3 id="modal-expense-title" class="modal-title">Add Expense Item</h3>
+          <button
+            type="button"
+            class="btn-close"
+            id="btn-close-expense-modal"
+            aria-label="Close dialog"
+          >
+            &times;
+          </button>
         </div>
-        <div class="form-group">
-          <label for="exp-description" class="form-label">Description / Item</label>
-          <input type="text" id="exp-description" class="form-input" placeholder="e.g. Banquet Hall Deposit" maxlength="100" required>
-        </div>
-        <div class="form-group">
-          <label for="exp-estimated" class="form-label">Estimated Cost ($)</label>
-          <input type="number" id="exp-estimated" class="form-input" min="0" step="10" required>
-        </div>
-        <div class="form-group">
-          <label for="exp-actual" class="form-label">Actual Committed Cost ($)</label>
-          <input type="number" id="exp-actual" class="form-input" min="0" step="10" required>
-        </div>
-        <div class="form-group">
-          <label for="exp-status" class="form-label">Payment Status</label>
-          <select id="exp-status" class="form-select">
-            <option value="Pending">Pending</option>
-            <option value="Deposit Paid">Deposit Paid</option>
-            <option value="Paid in Full">Paid in Full</option>
-          </select>
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="btn btn-outline btn-close-modal">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save Expense</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- 2. Add Milestone Modal -->
-  <div id="modal-milestone" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-milestone-title">
-    <div class="modal-dialog">
-      <div class="modal-header">
-        <h3 id="modal-milestone-title" class="modal-title">Add Timeline Milestone</h3>
-        <button type="button" class="btn-close" id="btn-close-milestone-modal" aria-label="Close dialog">&times;</button>
-      </div>
-      <form id="form-add-milestone" novalidate>
-        <div class="form-group">
-          <label for="ms-title" class="form-label">Milestone Title</label>
-          <input type="text" id="ms-title" class="form-input" placeholder="e.g. Finalize Catering Menu" maxlength="100" required>
-        </div>
-        <div class="form-group">
-          <label for="ms-phase" class="form-label">Phase</label>
-          <select id="ms-phase" class="form-select" required>
-            <option value="Ideation">Ideation &amp; Logistics</option>
-            <option value="Vendor Booking">Vendor Booking</option>
-            <option value="Ceremony">Ceremony &amp; Setup</option>
-            <option value="Reception">Reception / Main Event</option>
-            <option value="Breakdown">Breakdown &amp; Wrap-up</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="ms-date" class="form-label">Target Date &amp; Time</label>
-          <input type="datetime-local" id="ms-date" class="form-input" required>
-        </div>
-        <div class="form-group">
-          <label for="ms-notes" class="form-label">Execution Notes</label>
-          <textarea id="ms-notes" class="form-textarea" placeholder="Specific instructions or vendor assignments..." maxlength="250"></textarea>
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="btn btn-outline btn-close-modal">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save Milestone</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- 3. Add Vendor Modal -->
-  <div id="modal-vendor" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-vendor-title">
-    <div class="modal-dialog">
-      <div class="modal-header">
-        <h3 id="modal-vendor-title" class="modal-title">Add Vendor Partner</h3>
-        <button type="button" class="btn-close" id="btn-close-vendor-modal" aria-label="Close dialog">&times;</button>
-      </div>
-      <form id="form-add-vendor" novalidate>
-        <div class="form-group">
-          <label for="ven-category" class="form-label">Category</label>
-          <select id="ven-category" class="form-select" required>
-            <option value="Venue">Venue</option>
-            <option value="Catering">Catering</option>
-            <option value="Photography">Photography</option>
-            <option value="Music">Music &amp; DJ</option>
-            <option value="Florist">Florist &amp; Decor</option>
-            <option value="Transportation">Transportation</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="ven-name" class="form-label">Vendor Business Name</label>
-          <input type="text" id="ven-name" class="form-input" placeholder="e.g. Harborview Grand Ballroom" maxlength="100" required>
-        </div>
-        <div class="form-group">
-          <label for="ven-contact" class="form-label">Contact Email / Phone</label>
-          <input type="text" id="ven-contact" class="form-input" placeholder="e.g. events@harborview.com" maxlength="100" required>
-        </div>
-        <div class="form-group">
-          <label for="ven-fee" class="form-label">Quoted Fee ($)</label>
-          <input type="number" id="ven-fee" class="form-input" min="0" step="50" required>
-        </div>
-        <div class="form-group">
-          <label for="ven-status" class="form-label">Contract Status</label>
-          <select id="ven-status" class="form-select">
-            <option value="Researching">Researching</option>
-            <option value="Quoted">Quoted</option>
-            <option value="Contract Sent">Contract Sent</option>
-            <option value="Confirmed">Confirmed</option>
-          </select>
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="btn btn-outline btn-close-modal">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save Vendor</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- 4. Create New Event Modal with Visual Event Type Selection Cards -->
-  <div id="modal-new-event" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-new-event-title">
-    <div class="modal-dialog modal-dialog-lg">
-      <div class="modal-header">
-        <div>
-          <h3 id="modal-new-event-title" class="modal-title">Create Celebration Workspace</h3>
-          <p class="modal-subtitle">Establish an independent workspace with dedicated budget, timeline, and vendors.</p>
-        </div>
-        <button type="button" class="btn-close" id="btn-close-new-event-modal" aria-label="Close dialog">&times;</button>
-      </div>
-      <form id="form-create-event" novalidate>
-        <!-- Visual Event-Type Cards -->
-        <div class="form-group">
-          <label for="evt-type" class="form-label">Select Celebration Style</label>
-          <div class="event-type-cards-grid" role="radiogroup" aria-label="Event category selection">
-            <div class="event-type-card active" data-type="Wedding" tabindex="0" role="radio" aria-checked="true">
-              <span class="event-card-icon" aria-hidden="true">💍</span>
-              <div class="event-card-info">
-                <span class="event-card-title">Wedding</span>
-                <span class="event-card-desc">Ceremony, Reception &amp; Romance</span>
-              </div>
-            </div>
-            <div class="event-type-card" data-type="Birthday" tabindex="0" role="radio" aria-checked="false">
-              <span class="event-card-icon" aria-hidden="true">🎂</span>
-              <div class="event-card-info">
-                <span class="event-card-title">Birthday</span>
-                <span class="event-card-desc">Milestone, Celebration &amp; Party</span>
-              </div>
-            </div>
-            <div class="event-type-card" data-type="Corporate Event" tabindex="0" role="radio" aria-checked="false">
-              <span class="event-card-icon" aria-hidden="true">🏛️</span>
-              <div class="event-card-info">
-                <span class="event-card-title">Corporate Gala</span>
-                <span class="event-card-desc">Conference, Banquet &amp; Awards</span>
-              </div>
-            </div>
-            <div class="event-type-card" data-type="Community Event" tabindex="0" role="radio" aria-checked="false">
-              <span class="event-card-icon" aria-hidden="true">🎪</span>
-              <div class="event-card-info">
-                <span class="event-card-title">Community Festival</span>
-                <span class="event-card-desc">Cultural Fair, Gala &amp; Gathering</span>
-              </div>
-            </div>
-            <div class="event-type-card" data-type="Anniversary" tabindex="0" role="radio" aria-checked="false">
-              <span class="event-card-icon" aria-hidden="true">🥂</span>
-              <div class="event-card-info">
-                <span class="event-card-title">Engagement / Anniversary</span>
-                <span class="event-card-desc">Intimate Dining &amp; Milestone Cheers</span>
-              </div>
-            </div>
-          </div>
-          <!-- Hidden fallback select for robust form integration & accessibility -->
-          <select id="evt-type" class="form-select visually-hidden" required>
-            <option value="Wedding" selected>Wedding</option>
-            <option value="Birthday">Birthday</option>
-            <option value="Corporate Event">Corporate Event</option>
-            <option value="Community Event">Community Event</option>
-            <option value="Anniversary">Anniversary</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="evt-name" class="form-label">Celebration Name</label>
-          <input type="text" id="evt-name" class="form-input" placeholder="e.g. Maya &amp; Leo's Autumn Wedding" maxlength="80" required>
-        </div>
-
-        <div class="form-row-grid">
+        <form id="form-add-expense" novalidate>
           <div class="form-group">
-            <label for="evt-date" class="form-label">Celebration Date</label>
-            <input type="date" id="evt-date" class="form-input" required>
-          </div>
-          <div class="form-group">
-            <label for="evt-currency" class="form-label">Currency Preference</label>
-            <select id="evt-currency" class="form-select">
-              <option value="USD">USD ($) — United States Dollar</option>
-              <option value="INR">INR (₹) — Indian Rupee</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-row-grid">
-          <div class="form-group">
-            <label for="evt-budget" class="form-label">Target Ceiling Budget</label>
-            <input type="number" id="evt-budget" class="form-input" min="500" max="10000000" step="250" placeholder="e.g. 24000" required>
-          </div>
-          <div class="form-group">
-            <label for="evt-guests" class="form-label">Estimated Guest Count</label>
-            <input type="number" id="evt-guests" class="form-input" min="1" max="50000" placeholder="e.g. 120" required>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="evt-theme-notes" class="form-label">Aesthetic Vision / Theme Notes</label>
-          <textarea id="evt-theme-notes" class="form-textarea" placeholder="e.g. Candlelit vineyard, warm terracotta palettes, orchestral jazz..." maxlength="250"></textarea>
-        </div>
-
-        <div class="modal-actions">
-          <button type="button" class="btn btn-outline btn-close-modal">Cancel</button>
-          <button type="submit" class="btn btn-primary">Create Celebration</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Edit Active Celebration Modal -->
-  <div id="modal-edit-event" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-edit-event-title">
-    <div class="modal-dialog modal-dialog-lg">
-      <div class="modal-header">
-        <div>
-          <h3 id="modal-edit-event-title" class="modal-title">Edit Celebration Workspace</h3>
-          <p class="modal-subtitle">Update event date, planned ceiling, guest count, and styling notes.</p>
-        </div>
-        <button type="button" class="btn-close" id="btn-close-edit-event-modal" aria-label="Close dialog">&times;</button>
-      </div>
-      <form id="form-edit-event" novalidate>
-        <div class="form-group">
-          <label for="edit-evt-name" class="form-label">Celebration Title</label>
-          <input type="text" id="edit-evt-name" class="form-input" required maxlength="100">
-        </div>
-        <div class="form-row-grid">
-          <div class="form-group">
-            <label for="edit-evt-type" class="form-label">Celebration Type</label>
-            <select id="edit-evt-type" class="form-select" required>
-              <option value="Wedding">Wedding</option>
-              <option value="Birthday">Milestone Birthday</option>
-              <option value="Corporate Event">Corporate Gala / Summit</option>
-              <option value="Community Event">Community Festival</option>
-              <option value="Anniversary">Engagement / Anniversary</option>
+            <label for="exp-category" class="form-label">Expense Category</label>
+            <select id="exp-category" class="form-select" required>
+              <option value="Venue">Venue</option>
+              <option value="Catering">Catering</option>
+              <option value="Photography">Photography &amp; Video</option>
+              <option value="Entertainment">Music &amp; Entertainment</option>
+              <option value="Decor">Decor &amp; Floral</option>
+              <option value="Stationery">Stationery &amp; Invites</option>
+              <option value="Contingency">Contingency Reserve</option>
             </select>
           </div>
           <div class="form-group">
-            <label for="edit-evt-currency" class="form-label">Currency Preference</label>
-            <select id="edit-evt-currency" class="form-select">
-              <option value="USD">USD ($)</option>
-              <option value="INR">INR (₹)</option>
-              <option value="EUR">EUR (€)</option>
-              <option value="GBP">GBP (£)</option>
-              <option value="CAD">CAD ($)</option>
-              <option value="AUD">AUD ($)</option>
+            <label for="exp-description" class="form-label">Description / Item</label>
+            <input
+              type="text"
+              id="exp-description"
+              class="form-input"
+              placeholder="e.g. Banquet Hall Deposit"
+              maxlength="100"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="exp-estimated" class="form-label">Estimated Cost ($)</label>
+            <input type="number" id="exp-estimated" class="form-input" min="0" step="10" required />
+          </div>
+          <div class="form-group">
+            <label for="exp-actual" class="form-label">Actual Committed Cost ($)</label>
+            <input type="number" id="exp-actual" class="form-input" min="0" step="10" required />
+          </div>
+          <div class="form-group">
+            <label for="exp-status" class="form-label">Payment Status</label>
+            <select id="exp-status" class="form-select">
+              <option value="Pending">Pending</option>
+              <option value="Deposit Paid">Deposit Paid</option>
+              <option value="Paid in Full">Paid in Full</option>
             </select>
           </div>
-        </div>
-        <div class="form-row-grid">
-          <div class="form-group">
-            <label for="edit-evt-date" class="form-label">Celebration Date</label>
-            <input type="date" id="edit-evt-date" class="form-input" required>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-outline btn-close-modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Expense</button>
           </div>
-          <div class="form-group">
-            <label for="edit-evt-budget" class="form-label">Target Ceiling Budget</label>
-            <input type="number" id="edit-evt-budget" class="form-input" min="500" max="10000000" step="250" required>
-          </div>
-          <div class="form-group">
-            <label for="edit-evt-guests" class="form-label">Estimated Guest Count</label>
-            <input type="number" id="edit-evt-guests" class="form-input" min="1" max="50000" required>
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="edit-evt-theme-notes" class="form-label">Aesthetic Vision / Theme Notes</label>
-          <textarea id="edit-evt-theme-notes" class="form-textarea" rows="2" maxlength="300"></textarea>
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="btn btn-outline btn-close-modal">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save Changes</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Edit Expense Modal -->
-  <div id="modal-edit-expense" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-edit-expense-title">
-    <div class="modal-dialog">
-      <div class="modal-header">
-        <h3 id="modal-edit-expense-title" class="modal-title">Edit Expense Item</h3>
-        <button type="button" class="btn-close" id="btn-close-edit-expense-modal" aria-label="Close dialog">&times;</button>
+        </form>
       </div>
-      <form id="form-edit-expense">
-        <label for="edit-exp-id" class="visually-hidden">Expense Identifier</label>
-        <input type="hidden" id="edit-exp-id">
-        <div class="form-group">
-          <label for="edit-exp-category" class="form-label">Expense Category</label>
-          <select id="edit-exp-category" class="form-select" required>
-            <option value="Venue">Venue &amp; Space</option>
-            <option value="Catering">Catering &amp; Bar</option>
-            <option value="Photography">Photography &amp; Video</option>
-            <option value="Entertainment">Music &amp; Entertainment</option>
-            <option value="Decor">Floral &amp; Decor</option>
-            <option value="Stationery">Stationery &amp; Invites</option>
-            <option value="Attire">Attire &amp; Beauty</option>
-            <option value="Other">Miscellaneous &amp; Contingency</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="edit-exp-description" class="form-label">Item Description</label>
-          <input type="text" id="edit-exp-description" class="form-input" required maxlength="120">
-        </div>
-        <div class="form-row-grid">
-          <div class="form-group">
-            <label for="edit-exp-estimated" class="form-label">Estimated Allocation</label>
-            <input type="number" id="edit-exp-estimated" class="form-input" required min="0">
-          </div>
-          <div class="form-group">
-            <label for="edit-exp-actual" class="form-label">Actual Committed</label>
-            <input type="number" id="edit-exp-actual" class="form-input" required min="0">
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="edit-exp-status" class="form-label">Payment Status</label>
-          <select id="edit-exp-status" class="form-select" required>
-            <option value="Pending">Pending</option>
-            <option value="Deposit Paid">Deposit Paid</option>
-            <option value="Paid in Full">Paid in Full</option>
-          </select>
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="btn btn-outline btn-close-modal">Cancel</button>
-          <button type="submit" class="btn btn-primary">Update Expense</button>
-        </div>
-      </form>
     </div>
-  </div>
 
-  <!-- Edit Milestone Modal -->
-  <div id="modal-edit-milestone" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-edit-milestone-title">
-    <div class="modal-dialog">
-      <div class="modal-header">
-        <h3 id="modal-edit-milestone-title" class="modal-title">Edit Timeline Milestone</h3>
-        <button type="button" class="btn-close" id="btn-close-edit-milestone-modal" aria-label="Close dialog">&times;</button>
-      </div>
-      <form id="form-edit-milestone">
-        <label for="edit-ms-id" class="visually-hidden">Milestone Identifier</label>
-        <input type="hidden" id="edit-ms-id">
-        <div class="form-group">
-          <label for="edit-ms-title" class="form-label">Milestone Title</label>
-          <input type="text" id="edit-ms-title" class="form-input" required maxlength="100">
+    <!-- 2. Add Milestone Modal -->
+    <div
+      id="modal-milestone"
+      class="modal-backdrop hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-milestone-title"
+    >
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h3 id="modal-milestone-title" class="modal-title">Add Timeline Milestone</h3>
+          <button
+            type="button"
+            class="btn-close"
+            id="btn-close-milestone-modal"
+            aria-label="Close dialog"
+          >
+            &times;
+          </button>
         </div>
-        <div class="form-row-grid">
+        <form id="form-add-milestone" novalidate>
           <div class="form-group">
-            <label for="edit-ms-phase" class="form-label">Run-of-Show Phase</label>
-            <select id="edit-ms-phase" class="form-select" required>
-              <option value="Ideation">Planning &amp; Ideation</option>
-              <option value="Vendor Booking">Vendor Booking &amp; Logistics</option>
+            <label for="ms-title" class="form-label">Milestone Title</label>
+            <input
+              type="text"
+              id="ms-title"
+              class="form-input"
+              placeholder="e.g. Finalize Catering Menu"
+              maxlength="100"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="ms-phase" class="form-label">Phase</label>
+            <select id="ms-phase" class="form-select" required>
+              <option value="Ideation">Ideation &amp; Logistics</option>
+              <option value="Vendor Booking">Vendor Booking</option>
               <option value="Ceremony">Ceremony &amp; Setup</option>
-              <option value="Reception">Reception &amp; Party</option>
-              <option value="Breakdown">Breakdown &amp; Departure</option>
+              <option value="Reception">Reception / Main Event</option>
+              <option value="Breakdown">Breakdown &amp; Wrap-up</option>
             </select>
           </div>
           <div class="form-group">
-            <label for="edit-ms-date" class="form-label">Scheduled Date &amp; Time</label>
-            <input type="datetime-local" id="edit-ms-date" class="form-input" required>
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="edit-ms-notes" class="form-label">Logistics Notes</label>
-          <textarea id="edit-ms-notes" class="form-textarea" rows="2" maxlength="250"></textarea>
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="btn btn-outline btn-close-modal">Cancel</button>
-          <button type="submit" class="btn btn-primary">Update Milestone</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Edit Vendor Modal -->
-  <div id="modal-edit-vendor" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-edit-vendor-title">
-    <div class="modal-dialog">
-      <div class="modal-header">
-        <h3 id="modal-edit-vendor-title" class="modal-title">Edit Vendor Partner</h3>
-        <button type="button" class="btn-close" id="btn-close-edit-vendor-modal" aria-label="Close dialog">&times;</button>
-      </div>
-      <form id="form-edit-vendor">
-        <label for="edit-ven-id" class="visually-hidden">Vendor Identifier</label>
-        <input type="hidden" id="edit-ven-id">
-        <div class="form-group">
-          <label for="edit-ven-category" class="form-label">Category</label>
-          <select id="edit-ven-category" class="form-select" required>
-            <option value="Venue">Venue &amp; Space</option>
-            <option value="Catering">Artisan Catering &amp; Drinks</option>
-            <option value="Photography">Photography &amp; Cinematography</option>
-            <option value="Entertainment">Music, DJ &amp; Entertainment</option>
-            <option value="Decor">Floral &amp; Staging</option>
-            <option value="AV &amp; Production">AV &amp; Production</option>
-            <option value="Other">Other Services</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="edit-ven-name" class="form-label">Company / Partner Name</label>
-          <input type="text" id="edit-ven-name" class="form-input" required maxlength="100">
-        </div>
-        <div class="form-row-grid">
-          <div class="form-group">
-            <label for="edit-ven-contact" class="form-label">Contact Details</label>
-            <input type="text" id="edit-ven-contact" class="form-input" required maxlength="100">
+            <label for="ms-date" class="form-label">Target Date &amp; Time</label>
+            <input type="datetime-local" id="ms-date" class="form-input" required />
           </div>
           <div class="form-group">
-            <label for="edit-ven-fee" class="form-label">Agreed / Quoted Fee</label>
-            <input type="number" id="edit-ven-fee" class="form-input" required min="0">
+            <label for="ms-notes" class="form-label">Execution Notes</label>
+            <textarea
+              id="ms-notes"
+              class="form-textarea"
+              placeholder="Specific instructions or vendor assignments..."
+              maxlength="250"
+            ></textarea>
           </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-outline btn-close-modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Milestone</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 3. Add Vendor Modal -->
+    <div
+      id="modal-vendor"
+      class="modal-backdrop hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-vendor-title"
+    >
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h3 id="modal-vendor-title" class="modal-title">Add Vendor Partner</h3>
+          <button
+            type="button"
+            class="btn-close"
+            id="btn-close-vendor-modal"
+            aria-label="Close dialog"
+          >
+            &times;
+          </button>
         </div>
-        <div class="form-group">
-          <label for="edit-ven-status" class="form-label">Contract Status</label>
-          <select id="edit-ven-status" class="form-select" required>
-            <option value="Researching">Researching</option>
-            <option value="Contacted">Contacted</option>
-            <option value="Proposal Received">Proposal Received</option>
-            <option value="Confirmed">Confirmed</option>
-          </select>
+        <form id="form-add-vendor" novalidate>
+          <div class="form-group">
+            <label for="ven-category" class="form-label">Category</label>
+            <select id="ven-category" class="form-select" required>
+              <option value="Venue">Venue</option>
+              <option value="Catering">Catering</option>
+              <option value="Photography">Photography</option>
+              <option value="Music">Music &amp; DJ</option>
+              <option value="Florist">Florist &amp; Decor</option>
+              <option value="Transportation">Transportation</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="ven-name" class="form-label">Vendor Business Name</label>
+            <input
+              type="text"
+              id="ven-name"
+              class="form-input"
+              placeholder="e.g. Harborview Grand Ballroom"
+              maxlength="100"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="ven-contact" class="form-label">Contact Email / Phone</label>
+            <input
+              type="text"
+              id="ven-contact"
+              class="form-input"
+              placeholder="e.g. events@harborview.com"
+              maxlength="100"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="ven-fee" class="form-label">Quoted Fee ($)</label>
+            <input type="number" id="ven-fee" class="form-input" min="0" step="50" required />
+          </div>
+          <div class="form-group">
+            <label for="ven-status" class="form-label">Contract Status</label>
+            <select id="ven-status" class="form-select">
+              <option value="Researching">Researching</option>
+              <option value="Quoted">Quoted</option>
+              <option value="Contract Sent">Contract Sent</option>
+              <option value="Confirmed">Confirmed</option>
+            </select>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-outline btn-close-modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Vendor</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 4. Create New Event Modal with Visual Event Type Selection Cards -->
+    <div
+      id="modal-new-event"
+      class="modal-backdrop hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-new-event-title"
+    >
+      <div class="modal-dialog modal-dialog-lg">
+        <div class="modal-header">
+          <div>
+            <h3 id="modal-new-event-title" class="modal-title">Create Celebration Workspace</h3>
+            <p class="modal-subtitle">
+              Establish an independent workspace with dedicated budget, timeline, and vendors.
+            </p>
+          </div>
+          <button
+            type="button"
+            class="btn-close"
+            id="btn-close-new-event-modal"
+            aria-label="Close dialog"
+          >
+            &times;
+          </button>
+        </div>
+        <form id="form-create-event" novalidate>
+          <!-- Visual Event-Type Cards -->
+          <div class="form-group">
+            <label for="evt-type" class="form-label">Select Celebration Style</label>
+            <div
+              class="event-type-cards-grid"
+              role="radiogroup"
+              aria-label="Event category selection"
+            >
+              <div
+                class="event-type-card active"
+                data-type="Wedding"
+                tabindex="0"
+                role="radio"
+                aria-checked="true"
+              >
+                <span class="event-card-icon" aria-hidden="true">💍</span>
+                <div class="event-card-info">
+                  <span class="event-card-title">Wedding</span>
+                  <span class="event-card-desc">Ceremony, Reception &amp; Romance</span>
+                </div>
+              </div>
+              <div
+                class="event-type-card"
+                data-type="Birthday"
+                tabindex="0"
+                role="radio"
+                aria-checked="false"
+              >
+                <span class="event-card-icon" aria-hidden="true">🎂</span>
+                <div class="event-card-info">
+                  <span class="event-card-title">Birthday</span>
+                  <span class="event-card-desc">Milestone, Celebration &amp; Party</span>
+                </div>
+              </div>
+              <div
+                class="event-type-card"
+                data-type="Corporate Event"
+                tabindex="0"
+                role="radio"
+                aria-checked="false"
+              >
+                <span class="event-card-icon" aria-hidden="true">🏛️</span>
+                <div class="event-card-info">
+                  <span class="event-card-title">Corporate Gala</span>
+                  <span class="event-card-desc">Conference, Banquet &amp; Awards</span>
+                </div>
+              </div>
+              <div
+                class="event-type-card"
+                data-type="Community Event"
+                tabindex="0"
+                role="radio"
+                aria-checked="false"
+              >
+                <span class="event-card-icon" aria-hidden="true">🎪</span>
+                <div class="event-card-info">
+                  <span class="event-card-title">Community Festival</span>
+                  <span class="event-card-desc">Cultural Fair, Gala &amp; Gathering</span>
+                </div>
+              </div>
+              <div
+                class="event-type-card"
+                data-type="Anniversary"
+                tabindex="0"
+                role="radio"
+                aria-checked="false"
+              >
+                <span class="event-card-icon" aria-hidden="true">🥂</span>
+                <div class="event-card-info">
+                  <span class="event-card-title">Engagement / Anniversary</span>
+                  <span class="event-card-desc">Intimate Dining &amp; Milestone Cheers</span>
+                </div>
+              </div>
+            </div>
+            <!-- Hidden fallback select for robust form integration & accessibility -->
+            <select id="evt-type" class="form-select visually-hidden" required>
+              <option value="Wedding" selected>Wedding</option>
+              <option value="Birthday">Birthday</option>
+              <option value="Corporate Event">Corporate Event</option>
+              <option value="Community Event">Community Event</option>
+              <option value="Anniversary">Anniversary</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="evt-name" class="form-label">Celebration Name</label>
+            <input
+              type="text"
+              id="evt-name"
+              class="form-input"
+              placeholder="e.g. Maya &amp; Leo's Autumn Wedding"
+              maxlength="80"
+              required
+            />
+          </div>
+
+          <div class="form-row-grid">
+            <div class="form-group">
+              <label for="evt-date" class="form-label">Celebration Date</label>
+              <input type="date" id="evt-date" class="form-input" required />
+            </div>
+            <div class="form-group">
+              <label for="evt-currency" class="form-label">Currency Preference</label>
+              <select id="evt-currency" class="form-select">
+                <option value="USD">USD ($) — United States Dollar</option>
+                <option value="INR">INR (₹) — Indian Rupee</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row-grid">
+            <div class="form-group">
+              <label for="evt-budget" class="form-label">Target Ceiling Budget</label>
+              <input
+                type="number"
+                id="evt-budget"
+                class="form-input"
+                min="500"
+                max="10000000"
+                step="250"
+                placeholder="e.g. 24000"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="evt-guests" class="form-label">Estimated Guest Count</label>
+              <input
+                type="number"
+                id="evt-guests"
+                class="form-input"
+                min="1"
+                max="50000"
+                placeholder="e.g. 120"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="evt-theme-notes" class="form-label">Aesthetic Vision / Theme Notes</label>
+            <textarea
+              id="evt-theme-notes"
+              class="form-textarea"
+              placeholder="e.g. Candlelit vineyard, warm terracotta palettes, orchestral jazz..."
+              maxlength="250"
+            ></textarea>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn btn-outline btn-close-modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Create Celebration</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Edit Active Celebration Modal -->
+    <div
+      id="modal-edit-event"
+      class="modal-backdrop hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-edit-event-title"
+    >
+      <div class="modal-dialog modal-dialog-lg">
+        <div class="modal-header">
+          <div>
+            <h3 id="modal-edit-event-title" class="modal-title">Edit Celebration Workspace</h3>
+            <p class="modal-subtitle">
+              Update event date, planned ceiling, guest count, and styling notes.
+            </p>
+          </div>
+          <button
+            type="button"
+            class="btn-close"
+            id="btn-close-edit-event-modal"
+            aria-label="Close dialog"
+          >
+            &times;
+          </button>
+        </div>
+        <form id="form-edit-event" novalidate>
+          <div class="form-group">
+            <label for="edit-evt-name" class="form-label">Celebration Title</label>
+            <input type="text" id="edit-evt-name" class="form-input" required maxlength="100" />
+          </div>
+          <div class="form-row-grid">
+            <div class="form-group">
+              <label for="edit-evt-type" class="form-label">Celebration Type</label>
+              <select id="edit-evt-type" class="form-select" required>
+                <option value="Wedding">Wedding</option>
+                <option value="Birthday">Milestone Birthday</option>
+                <option value="Corporate Event">Corporate Gala / Summit</option>
+                <option value="Community Event">Community Festival</option>
+                <option value="Anniversary">Engagement / Anniversary</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="edit-evt-currency" class="form-label">Currency Preference</label>
+              <select id="edit-evt-currency" class="form-select">
+                <option value="USD">USD ($)</option>
+                <option value="INR">INR (₹)</option>
+                <option value="EUR">EUR (€)</option>
+                <option value="GBP">GBP (£)</option>
+                <option value="CAD">CAD ($)</option>
+                <option value="AUD">AUD ($)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row-grid">
+            <div class="form-group">
+              <label for="edit-evt-date" class="form-label">Celebration Date</label>
+              <input type="date" id="edit-evt-date" class="form-input" required />
+            </div>
+            <div class="form-group">
+              <label for="edit-evt-budget" class="form-label">Target Ceiling Budget</label>
+              <input
+                type="number"
+                id="edit-evt-budget"
+                class="form-input"
+                min="500"
+                max="10000000"
+                step="250"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="edit-evt-guests" class="form-label">Estimated Guest Count</label>
+              <input
+                type="number"
+                id="edit-evt-guests"
+                class="form-input"
+                min="1"
+                max="50000"
+                required
+              />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="edit-evt-theme-notes" class="form-label"
+              >Aesthetic Vision / Theme Notes</label
+            >
+            <textarea
+              id="edit-evt-theme-notes"
+              class="form-textarea"
+              rows="2"
+              maxlength="300"
+            ></textarea>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-outline btn-close-modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Edit Expense Modal -->
+    <div
+      id="modal-edit-expense"
+      class="modal-backdrop hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-edit-expense-title"
+    >
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h3 id="modal-edit-expense-title" class="modal-title">Edit Expense Item</h3>
+          <button
+            type="button"
+            class="btn-close"
+            id="btn-close-edit-expense-modal"
+            aria-label="Close dialog"
+          >
+            &times;
+          </button>
+        </div>
+        <form id="form-edit-expense">
+          <label for="edit-exp-id" class="visually-hidden">Expense Identifier</label>
+          <input type="hidden" id="edit-exp-id" />
+          <div class="form-group">
+            <label for="edit-exp-category" class="form-label">Expense Category</label>
+            <select id="edit-exp-category" class="form-select" required>
+              <option value="Venue">Venue &amp; Space</option>
+              <option value="Catering">Catering &amp; Bar</option>
+              <option value="Photography">Photography &amp; Video</option>
+              <option value="Entertainment">Music &amp; Entertainment</option>
+              <option value="Decor">Floral &amp; Decor</option>
+              <option value="Stationery">Stationery &amp; Invites</option>
+              <option value="Attire">Attire &amp; Beauty</option>
+              <option value="Other">Miscellaneous &amp; Contingency</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="edit-exp-description" class="form-label">Item Description</label>
+            <input
+              type="text"
+              id="edit-exp-description"
+              class="form-input"
+              required
+              maxlength="120"
+            />
+          </div>
+          <div class="form-row-grid">
+            <div class="form-group">
+              <label for="edit-exp-estimated" class="form-label">Estimated Allocation</label>
+              <input type="number" id="edit-exp-estimated" class="form-input" required min="0" />
+            </div>
+            <div class="form-group">
+              <label for="edit-exp-actual" class="form-label">Actual Committed</label>
+              <input type="number" id="edit-exp-actual" class="form-input" required min="0" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="edit-exp-status" class="form-label">Payment Status</label>
+            <select id="edit-exp-status" class="form-select" required>
+              <option value="Pending">Pending</option>
+              <option value="Deposit Paid">Deposit Paid</option>
+              <option value="Paid in Full">Paid in Full</option>
+            </select>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-outline btn-close-modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Update Expense</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Edit Milestone Modal -->
+    <div
+      id="modal-edit-milestone"
+      class="modal-backdrop hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-edit-milestone-title"
+    >
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h3 id="modal-edit-milestone-title" class="modal-title">Edit Timeline Milestone</h3>
+          <button
+            type="button"
+            class="btn-close"
+            id="btn-close-edit-milestone-modal"
+            aria-label="Close dialog"
+          >
+            &times;
+          </button>
+        </div>
+        <form id="form-edit-milestone">
+          <label for="edit-ms-id" class="visually-hidden">Milestone Identifier</label>
+          <input type="hidden" id="edit-ms-id" />
+          <div class="form-group">
+            <label for="edit-ms-title" class="form-label">Milestone Title</label>
+            <input type="text" id="edit-ms-title" class="form-input" required maxlength="100" />
+          </div>
+          <div class="form-row-grid">
+            <div class="form-group">
+              <label for="edit-ms-phase" class="form-label">Run-of-Show Phase</label>
+              <select id="edit-ms-phase" class="form-select" required>
+                <option value="Ideation">Planning &amp; Ideation</option>
+                <option value="Vendor Booking">Vendor Booking &amp; Logistics</option>
+                <option value="Ceremony">Ceremony &amp; Setup</option>
+                <option value="Reception">Reception &amp; Party</option>
+                <option value="Breakdown">Breakdown &amp; Departure</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="edit-ms-date" class="form-label">Scheduled Date &amp; Time</label>
+              <input type="datetime-local" id="edit-ms-date" class="form-input" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="edit-ms-notes" class="form-label">Logistics Notes</label>
+            <textarea id="edit-ms-notes" class="form-textarea" rows="2" maxlength="250"></textarea>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-outline btn-close-modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Update Milestone</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Edit Vendor Modal -->
+    <div
+      id="modal-edit-vendor"
+      class="modal-backdrop hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-edit-vendor-title"
+    >
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h3 id="modal-edit-vendor-title" class="modal-title">Edit Vendor Partner</h3>
+          <button
+            type="button"
+            class="btn-close"
+            id="btn-close-edit-vendor-modal"
+            aria-label="Close dialog"
+          >
+            &times;
+          </button>
+        </div>
+        <form id="form-edit-vendor">
+          <label for="edit-ven-id" class="visually-hidden">Vendor Identifier</label>
+          <input type="hidden" id="edit-ven-id" />
+          <div class="form-group">
+            <label for="edit-ven-category" class="form-label">Category</label>
+            <select id="edit-ven-category" class="form-select" required>
+              <option value="Venue">Venue &amp; Space</option>
+              <option value="Catering">Artisan Catering &amp; Drinks</option>
+              <option value="Photography">Photography &amp; Cinematography</option>
+              <option value="Entertainment">Music, DJ &amp; Entertainment</option>
+              <option value="Decor">Floral &amp; Staging</option>
+              <option value="AV &amp; Production">AV &amp; Production</option>
+              <option value="Other">Other Services</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="edit-ven-name" class="form-label">Company / Partner Name</label>
+            <input type="text" id="edit-ven-name" class="form-input" required maxlength="100" />
+          </div>
+          <div class="form-row-grid">
+            <div class="form-group">
+              <label for="edit-ven-contact" class="form-label">Contact Details</label>
+              <input
+                type="text"
+                id="edit-ven-contact"
+                class="form-input"
+                required
+                maxlength="100"
+              />
+            </div>
+            <div class="form-group">
+              <label for="edit-ven-fee" class="form-label">Agreed / Quoted Fee</label>
+              <input type="number" id="edit-ven-fee" class="form-input" required min="0" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="edit-ven-status" class="form-label">Contract Status</label>
+            <select id="edit-ven-status" class="form-select" required>
+              <option value="Researching">Researching</option>
+              <option value="Contacted">Contacted</option>
+              <option value="Proposal Received">Proposal Received</option>
+              <option value="Confirmed">Confirmed</option>
+            </select>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-outline btn-close-modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Update Vendor</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 5. Google Calendar & Export Sync Modal -->
+    <div
+      id="modal-sync"
+      class="modal-backdrop hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-sync-title"
+    >
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h3 id="modal-sync-title" class="modal-title">Google Calendar &amp; Export Center</h3>
+          <button
+            type="button"
+            class="btn-close"
+            id="btn-close-sync-modal"
+            aria-label="Close dialog"
+          >
+            &times;
+          </button>
+        </div>
+        <div class="surface-card" style="margin-bottom: 1rem">
+          <h4 class="card-title">Google Calendar Sync</h4>
+          <p class="panel-description" style="margin-bottom: 1rem">
+            Export the complete celebration timeline directly into your Google Calendar or download
+            standard RFC 5545 iCalendar files.
+          </p>
+          <div style="display: flex; flex-direction: column; gap: 0.75rem">
+            <button type="button" id="btn-export-ical" class="btn btn-outline" style="width: 100%">
+              <svg
+                class="btn-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span>Download .ics Calendar File</span>
+            </button>
+
+            <button type="button" id="btn-export-json" class="btn btn-outline" style="width: 100%">
+              <svg
+                class="btn-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+              </svg>
+              <span>Export Event Backup (JSON)</span>
+            </button>
+
+            <label
+              for="input-restore-json"
+              class="btn btn-outline"
+              style="width: 100%; cursor: pointer"
+            >
+              <svg
+                class="btn-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              <span>Restore / Import Event Backup (JSON)</span>
+              <input
+                type="file"
+                id="input-restore-json"
+                accept=".json,application/json"
+                class="visually-hidden"
+              />
+            </label>
+          </div>
         </div>
         <div class="modal-actions">
-          <button type="button" class="btn btn-outline btn-close-modal">Cancel</button>
-          <button type="submit" class="btn btn-primary">Update Vendor</button>
+          <button type="button" class="btn btn-primary btn-close-modal">Close</button>
         </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- 5. Google Calendar & Export Sync Modal -->
-  <div id="modal-sync" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-sync-title">
-    <div class="modal-dialog">
-      <div class="modal-header">
-        <h3 id="modal-sync-title" class="modal-title">Google Calendar &amp; Export Center</h3>
-        <button type="button" class="btn-close" id="btn-close-sync-modal" aria-label="Close dialog">&times;</button>
       </div>
-      <div class="surface-card" style="margin-bottom: 1rem;">
-        <h4 class="card-title">Google Calendar Sync</h4>
-        <p class="panel-description" style="margin-bottom: 1rem;">Export the complete celebration timeline directly into your Google Calendar or download standard RFC 5545 iCalendar files.</p>
-        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-          <button type="button" id="btn-export-ical" class="btn btn-outline" style="width: 100%;">
-            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="7 10 12 15 17 10"></polyline>
-              <line x1="12" y1="15" x2="12" y2="3"></line>
-            </svg>
-            <span>Download .ics Calendar File</span>
+    </div>
+
+    <!-- 6. Apply Plan Confirmation & Preview Modal (Fixed: No side-tab anti-patterns) -->
+    <div
+      id="modal-apply-plan-preview"
+      class="modal-backdrop hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-apply-plan-title"
+    >
+      <div class="modal-dialog" style="max-width: 680px">
+        <div class="modal-header">
+          <div>
+            <h3 id="modal-apply-plan-title" class="modal-title">Apply Plan to Celebration</h3>
+            <p
+              id="modal-apply-plan-subtitle"
+              style="
+                font-size: var(--text-xs);
+                color: var(--color-text-secondary);
+                margin-top: 0.25rem;
+              "
+            >
+              Review recommendations before applying to active workspace.
+            </p>
+          </div>
+          <button
+            type="button"
+            class="btn-close"
+            id="btn-close-apply-plan-modal"
+            aria-label="Close dialog"
+          >
+            &times;
           </button>
+        </div>
 
-          <button type="button" id="btn-export-json" class="btn btn-outline" style="width: 100%;">
-            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-              <polyline points="14 2 14 8 20 8"></polyline>
-              <line x1="16" y1="13" x2="8" y2="13"></line>
-              <line x1="16" y1="17" x2="8" y2="17"></line>
-            </svg>
-            <span>Export Event Backup (JSON)</span>
+        <div class="modal-body" style="padding: var(--space-4); max-height: 70vh; overflow-y: auto">
+          <!-- Target celebration indicator -->
+          <div
+            class="preview-target-box"
+            style="
+              background: var(--color-bg-subtle);
+              border: 1px solid var(--color-border-subtle);
+              border-radius: var(--radius-md);
+              padding: var(--space-3);
+              margin-bottom: var(--space-3);
+            "
+          >
+            <div
+              style="
+                font-size: var(--text-xs);
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                color: var(--color-accent-text);
+                font-weight: 700;
+              "
+            >
+              Target Celebration Workspace
+            </div>
+            <div
+              id="preview-event-name"
+              style="
+                font-size: var(--text-base);
+                font-weight: 700;
+                margin-top: 0.25rem;
+                color: var(--color-text-primary);
+              "
+            ></div>
+            <div
+              id="preview-event-stats"
+              style="font-size: var(--text-xs); color: var(--color-text-secondary)"
+            ></div>
+          </div>
+
+          <!-- De-duplication and Non-Destructive Notice (Refined without thick side-border) -->
+          <div
+            class="preview-safety-notice"
+            style="
+              background: var(--color-success-bg);
+              border: 1px solid rgba(5, 150, 105, 0.25);
+              border-radius: var(--radius-md);
+              padding: var(--space-3);
+              margin-bottom: var(--space-3);
+              font-size: var(--text-xs);
+              color: var(--color-success-text);
+            "
+          >
+            <div style="font-weight: 700; margin-bottom: 2px">
+              🛡️ Non-Destructive Preservation Guarantee
+            </div>
+            Existing expenses, registered vendors, and completed milestones will be strictly
+            preserved. Only non-duplicate recommended items will be appended.
+          </div>
+
+          <!-- Detected duplicates alert (hidden if 0 duplicates, refined without side-border) -->
+          <div
+            id="preview-duplicates-alert"
+            class="preview-duplicates-alert hidden"
+            style="
+              background: var(--color-warning-bg);
+              border: 1px solid rgba(217, 119, 6, 0.25);
+              border-radius: var(--radius-md);
+              padding: var(--space-3);
+              margin-bottom: var(--space-3);
+              font-size: var(--text-xs);
+              color: var(--color-warning-text);
+            "
+          >
+            <div style="font-weight: 700; margin-bottom: 2px">⚠️ Duplicate Items Detected</div>
+            <span id="preview-duplicates-text"></span>
+          </div>
+
+          <!-- Summary Breakdown -->
+          <div
+            class="preview-summary-grid"
+            style="
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+              gap: var(--space-3);
+              margin-bottom: var(--space-3);
+            "
+          >
+            <div class="metric-card" style="padding: var(--space-3)">
+              <div style="font-size: var(--text-xs); color: var(--color-text-secondary)">
+                Expenses to Add
+              </div>
+              <div
+                id="preview-count-expenses"
+                style="
+                  font-size: var(--text-xl);
+                  font-weight: 700;
+                  color: var(--color-text-primary);
+                "
+              >
+                0
+              </div>
+              <div
+                id="preview-total-cost"
+                style="font-size: var(--text-xs); color: var(--color-accent-text); font-weight: 600"
+              >
+                $0
+              </div>
+            </div>
+            <div class="metric-card" style="padding: var(--space-3)">
+              <div style="font-size: var(--text-xs); color: var(--color-text-secondary)">
+                Milestones to Add
+              </div>
+              <div
+                id="preview-count-milestones"
+                style="
+                  font-size: var(--text-xl);
+                  font-weight: 700;
+                  color: var(--color-text-primary);
+                "
+              >
+                0
+              </div>
+              <div style="font-size: var(--text-xs); color: var(--color-text-secondary)">
+                Chronologically scheduled
+              </div>
+            </div>
+            <div class="metric-card" style="padding: var(--space-3)">
+              <div style="font-size: var(--text-xs); color: var(--color-text-secondary)">
+                Vendors to Register
+              </div>
+              <div
+                id="preview-count-vendors"
+                style="
+                  font-size: var(--text-xl);
+                  font-weight: 700;
+                  color: var(--color-text-primary);
+                "
+              >
+                0
+              </div>
+              <div style="font-size: var(--text-xs); color: var(--color-text-secondary)">
+                Ready for outreach
+              </div>
+            </div>
+          </div>
+
+          <!-- Detailed Item List -->
+          <div id="preview-items-detail" style="font-size: var(--text-sm)">
+            <!-- Populated by JS -->
+          </div>
+
+          <!-- Explicit Confirmation Checkbox -->
+          <div
+            style="
+              margin-top: var(--space-3);
+              padding-top: var(--space-3);
+              border-top: 1px solid var(--color-border-subtle);
+            "
+          >
+            <label
+              for="chk-confirm-apply-plan"
+              class="form-checkbox-label"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                cursor: pointer;
+                font-size: var(--text-xs);
+                color: var(--color-text-secondary);
+              "
+            >
+              <input type="checkbox" id="chk-confirm-apply-plan" checked />
+              <span
+                >I confirm applying these recommendations to the active celebration workspace.</span
+              >
+            </label>
+          </div>
+        </div>
+
+        <div
+          class="modal-actions"
+          style="
+            display: flex;
+            justify-content: flex-end;
+            gap: var(--space-3);
+            padding: var(--space-3) var(--space-4);
+            border-top: 1px solid var(--color-border-subtle);
+          "
+        >
+          <button type="button" class="btn btn-secondary" id="btn-cancel-apply-plan">Cancel</button>
+          <button type="button" class="btn btn-primary" id="btn-confirm-apply-plan">
+            <span>Apply Recommendations Now</span>
           </button>
-
-          <label for="input-restore-json" class="btn btn-outline" style="width: 100%; cursor: pointer;">
-            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="17 8 12 3 7 8"></polyline>
-              <line x1="12" y1="3" x2="12" y2="15"></line>
-            </svg>
-            <span>Restore / Import Event Backup (JSON)</span>
-            <input type="file" id="input-restore-json" accept=".json,application/json" class="visually-hidden">
-          </label>
         </div>
-      </div>
-      <div class="modal-actions">
-        <button type="button" class="btn btn-primary btn-close-modal">Close</button>
       </div>
     </div>
-  </div>
 
-  <!-- 6. Apply Plan Confirmation & Preview Modal (Fixed: No side-tab anti-patterns) -->
-  <div id="modal-apply-plan-preview" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-apply-plan-title">
-    <div class="modal-dialog" style="max-width: 680px;">
-      <div class="modal-header">
-        <div>
-          <h3 id="modal-apply-plan-title" class="modal-title">Apply Plan to Celebration</h3>
-          <p id="modal-apply-plan-subtitle" style="font-size: var(--text-xs); color: var(--color-text-secondary); margin-top: 0.25rem;">Review recommendations before applying to active workspace.</p>
-        </div>
-        <button type="button" class="btn-close" id="btn-close-apply-plan-modal" aria-label="Close dialog">&times;</button>
-      </div>
-
-      <div class="modal-body" style="padding: var(--space-4); max-height: 70vh; overflow-y: auto;">
-        <!-- Target celebration indicator -->
-        <div class="preview-target-box" style="background: var(--color-bg-subtle); border: 1px solid var(--color-border-subtle); border-radius: var(--radius-md); padding: var(--space-3); margin-bottom: var(--space-3);">
-          <div style="font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-accent-text); font-weight: 700;">Target Celebration Workspace</div>
-          <div id="preview-event-name" style="font-size: var(--text-base); font-weight: 700; margin-top: 0.25rem; color: var(--color-text-primary);"></div>
-          <div id="preview-event-stats" style="font-size: var(--text-xs); color: var(--color-text-secondary);"></div>
-        </div>
-
-        <!-- De-duplication and Non-Destructive Notice (Refined without thick side-border) -->
-        <div class="preview-safety-notice" style="background: var(--color-success-bg); border: 1px solid rgba(5, 150, 105, 0.25); border-radius: var(--radius-md); padding: var(--space-3); margin-bottom: var(--space-3); font-size: var(--text-xs); color: var(--color-success-text);">
-          <div style="font-weight: 700; margin-bottom: 2px;">🛡️ Non-Destructive Preservation Guarantee</div>
-          Existing expenses, registered vendors, and completed milestones will be strictly preserved. Only non-duplicate recommended items will be appended.
-        </div>
-
-        <!-- Detected duplicates alert (hidden if 0 duplicates, refined without side-border) -->
-        <div id="preview-duplicates-alert" class="preview-duplicates-alert hidden" style="background: var(--color-warning-bg); border: 1px solid rgba(217, 119, 6, 0.25); border-radius: var(--radius-md); padding: var(--space-3); margin-bottom: var(--space-3); font-size: var(--text-xs); color: var(--color-warning-text);">
-          <div style="font-weight: 700; margin-bottom: 2px;">⚠️ Duplicate Items Detected</div>
-          <span id="preview-duplicates-text"></span>
-        </div>
-
-        <!-- Summary Breakdown -->
-        <div class="preview-summary-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-3); margin-bottom: var(--space-3);">
-          <div class="metric-card" style="padding: var(--space-3);">
-            <div style="font-size: var(--text-xs); color: var(--color-text-secondary);">Expenses to Add</div>
-            <div id="preview-count-expenses" style="font-size: var(--text-xl); font-weight: 700; color: var(--color-text-primary);">0</div>
-            <div id="preview-total-cost" style="font-size: var(--text-xs); color: var(--color-accent-text); font-weight: 600;">$0</div>
+    <!-- 7. Saved AI Plans Library Modal -->
+    <div
+      id="modal-saved-plans"
+      class="modal-backdrop hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-saved-plans-title"
+    >
+      <div class="modal-dialog" style="max-width: 640px">
+        <div class="modal-header">
+          <div>
+            <h3 id="modal-saved-plans-title" class="modal-title">Saved AI Inspiration Plans</h3>
+            <p
+              id="modal-saved-plans-subtitle"
+              style="
+                font-size: var(--text-xs);
+                color: var(--color-text-secondary);
+                margin-top: 0.25rem;
+              "
+            >
+              Plans saved specifically for this celebration workspace.
+            </p>
           </div>
-          <div class="metric-card" style="padding: var(--space-3);">
-            <div style="font-size: var(--text-xs); color: var(--color-text-secondary);">Milestones to Add</div>
-            <div id="preview-count-milestones" style="font-size: var(--text-xl); font-weight: 700; color: var(--color-text-primary);">0</div>
-            <div style="font-size: var(--text-xs); color: var(--color-text-secondary);">Chronologically scheduled</div>
-          </div>
-          <div class="metric-card" style="padding: var(--space-3);">
-            <div style="font-size: var(--text-xs); color: var(--color-text-secondary);">Vendors to Register</div>
-            <div id="preview-count-vendors" style="font-size: var(--text-xl); font-weight: 700; color: var(--color-text-primary);">0</div>
-            <div style="font-size: var(--text-xs); color: var(--color-text-secondary);">Ready for outreach</div>
+          <button
+            type="button"
+            class="btn-close"
+            id="btn-close-saved-plans-modal"
+            aria-label="Close dialog"
+          >
+            &times;
+          </button>
+        </div>
+
+        <div class="modal-body" style="padding: var(--space-4); max-height: 70vh; overflow-y: auto">
+          <div id="saved-plans-list-container">
+            <!-- Populated by JS -->
           </div>
         </div>
 
-        <!-- Detailed Item List -->
-        <div id="preview-items-detail" style="font-size: var(--text-sm);">
-          <!-- Populated by JS -->
+        <div
+          class="modal-actions"
+          style="
+            display: flex;
+            justify-content: flex-end;
+            padding: var(--space-3) var(--space-4);
+            border-top: 1px solid var(--color-border-subtle);
+          "
+        >
+          <button type="button" class="btn btn-secondary" id="btn-close-saved-plans-bottom">
+            Close
+          </button>
         </div>
-
-        <!-- Explicit Confirmation Checkbox -->
-        <div style="margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--color-border-subtle);">
-          <label for="chk-confirm-apply-plan" class="form-checkbox-label" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: var(--text-xs); color: var(--color-text-secondary);">
-            <input type="checkbox" id="chk-confirm-apply-plan" checked>
-            <span>I confirm applying these recommendations to the active celebration workspace.</span>
-          </label>
-        </div>
-      </div>
-
-      <div class="modal-actions" style="display: flex; justify-content: flex-end; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-top: 1px solid var(--color-border-subtle);">
-        <button type="button" class="btn btn-secondary" id="btn-cancel-apply-plan">Cancel</button>
-        <button type="button" class="btn btn-primary" id="btn-confirm-apply-plan">
-          <span>Apply Recommendations Now</span>
-        </button>
       </div>
     </div>
-  </div>
 
-  <!-- 7. Saved AI Plans Library Modal -->
-  <div id="modal-saved-plans" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-saved-plans-title">
-    <div class="modal-dialog" style="max-width: 640px;">
-      <div class="modal-header">
-        <div>
-          <h3 id="modal-saved-plans-title" class="modal-title">Saved AI Inspiration Plans</h3>
-          <p id="modal-saved-plans-subtitle" style="font-size: var(--text-xs); color: var(--color-text-secondary); margin-top: 0.25rem;">Plans saved specifically for this celebration workspace.</p>
+    <!-- Toast Notification Container -->
+    <div
+      id="toast-container"
+      class="toast-container"
+      aria-live="assertive"
+      aria-atomic="true"
+    ></div>
+
+    <!-- Footer -->
+    <footer class="app-footer" role="contentinfo">
+      <div class="footer-container">
+        <div class="footer-brand">
+          <span class="footer-title">AuraEvent Studio</span>
+          <span class="footer-copy"
+            >&copy; 2026 AuraEvent. Modern Celebration &amp; Event Planning Atelier. Built for
+            Google Antigravity.</span
+          >
         </div>
-        <button type="button" class="btn-close" id="btn-close-saved-plans-modal" aria-label="Close dialog">&times;</button>
+        <ul class="footer-links">
+          <li><a href="#main-content" class="footer-link">Back to Top</a></li>
+          <li><span class="badge badge-info">WCAG 2.1 AA</span></li>
+          <li><span class="badge badge-success">Google Gemini Ready</span></li>
+        </ul>
       </div>
-
-      <div class="modal-body" style="padding: var(--space-4); max-height: 70vh; overflow-y: auto;">
-        <div id="saved-plans-list-container">
-          <!-- Populated by JS -->
-        </div>
-      </div>
-
-      <div class="modal-actions" style="display: flex; justify-content: flex-end; padding: var(--space-3) var(--space-4); border-top: 1px solid var(--color-border-subtle);">
-        <button type="button" class="btn btn-secondary" id="btn-close-saved-plans-bottom">Close</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Toast Notification Container -->
-  <div id="toast-container" class="toast-container" aria-live="assertive" aria-atomic="true"></div>
-
-  <!-- Footer -->
-  <footer class="app-footer" role="contentinfo">
-    <div class="footer-container">
-      <div class="footer-brand">
-        <span class="footer-title">AuraEvent Studio</span>
-        <span class="footer-copy">&copy; 2026 AuraEvent. Modern Celebration &amp; Event Planning Atelier. Built for Google Antigravity.</span>
-      </div>
-      <ul class="footer-links">
-        <li><a href="#main-content" class="footer-link">Back to Top</a></li>
-        <li><span class="badge badge-info">WCAG 2.1 AA</span></li>
-        <li><span class="badge badge-success">Google Gemini Ready</span></li>
-      </ul>
-    </div>
-  </footer>
-</body>
+    </footer>
+  </body>
 </html>

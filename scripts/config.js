@@ -58,9 +58,9 @@ export const APP_CONFIG = Object.freeze({
 
   /** Default proportional budget allocation ratios */
   DEFAULT_BUDGET_RATIOS: Object.freeze({
-    CATERING: 0.40,
+    CATERING: 0.4,
     VENUE: 0.25,
-    DECOR: 0.20,
+    DECOR: 0.2,
     ENTERTAINMENT: 0.15,
     PHOTOGRAPHY: 0.15
   }),
@@ -86,11 +86,7 @@ export const APP_CONFIG = Object.freeze({
   ]),
 
   /** Expense line item payment statuses */
-  EXPENSE_STATUSES: Object.freeze([
-    'Paid in Full',
-    'Deposit Paid',
-    'Pending'
-  ]),
+  EXPENSE_STATUSES: Object.freeze(['Paid in Full', 'Deposit Paid', 'Pending']),
 
   /** Business rule limits and thresholds */
   LIMITS: Object.freeze({

@@ -48,7 +48,7 @@ process.stdout.write('\n=== AuraEvent Automated Code Quality & Lint Audit ===\n\
 
 // 1. Check for console.log statements
 check('Zero console.log statements in production code', () => {
-  PRODUCTION_FILES.forEach((rel) => {
+  PRODUCTION_FILES.forEach(rel => {
     const full = path.join(rootDir, rel);
     const content = fs.readFileSync(full, 'utf8');
     if (content.includes('console.log(')) {
@@ -59,15 +59,20 @@ check('Zero console.log statements in production code', () => {
 
 // 2. Check for unused named imports
 check('Zero unused named imports in ES modules', () => {
-  PRODUCTION_FILES.forEach((rel) => {
+  PRODUCTION_FILES.forEach(rel => {
     const full = path.join(rootDir, rel);
     const content = fs.readFileSync(full, 'utf8');
-    const lines = content.split('\n').filter((l) => l.trim().startsWith('import '));
-    lines.forEach((line) => {
+    const lines = content.split('\n').filter(l => l.trim().startsWith('import '));
+    lines.forEach(line => {
       const braceMatch = line.match(/\{([^}]+)\}/);
       if (braceMatch) {
-        const symbols = braceMatch[1].split(',').map((s) => s.trim().split(/\s+as\s+/).pop());
-        symbols.forEach((sym) => {
+        const symbols = braceMatch[1].split(',').map(s =>
+          s
+            .trim()
+            .split(/\s+as\s+/)
+            .pop()
+        );
+        symbols.forEach(sym => {
           if (!sym) return;
           const count = content.split(sym).length - 1;
           if (count <= 1) {
@@ -81,14 +86,16 @@ check('Zero unused named imports in ES modules', () => {
 
 // 3. Check for silent / empty catch blocks
 check('Zero silent or empty catch blocks', () => {
-  PRODUCTION_FILES.forEach((rel) => {
+  PRODUCTION_FILES.forEach(rel => {
     const full = path.join(rootDir, rel);
     const content = fs.readFileSync(full, 'utf8');
     const matches = [...content.matchAll(/catch\s*(?:\([^)]*\))?\s*\{([^}]*)\}/g)];
-    matches.forEach((m) => {
+    matches.forEach(m => {
       const body = m[1].replace(/\/\/[^\n]*|\/\*[\s\S]*?\*\//g, '').trim();
       if (!body) {
-        throw new Error(`Empty or comment-only catch block found in ${rel}: "${m[0].slice(0, 35)}..."`);
+        throw new Error(
+          `Empty or comment-only catch block found in ${rel}: "${m[0].slice(0, 35)}..."`
+        );
       }
     });
   });
@@ -96,8 +103,8 @@ check('Zero silent or empty catch blocks', () => {
 
 // 4. Check for secret leakage or hardcoded keys
 check('Zero hardcoded private secrets or API keys in client modules', () => {
-  const clientFiles = PRODUCTION_FILES.filter((f) => f.startsWith('scripts/'));
-  clientFiles.forEach((rel) => {
+  const clientFiles = PRODUCTION_FILES.filter(f => f.startsWith('scripts/'));
+  clientFiles.forEach(rel => {
     const full = path.join(rootDir, rel);
     const content = fs.readFileSync(full, 'utf8');
     if (/AIzaSy[a-zA-Z0-9_-]{33}/.test(content)) {
@@ -119,10 +126,11 @@ check('.gitignore strictly isolates sensitive environment variables', () => {
 });
 
 process.stdout.write(`\n========================================\n`);
-process.stdout.write(`Quality Checks: ${checksTotal} | Passed: ${checksPassed} | Errors: ${errors.length}\n`);
+process.stdout.write(
+  `Quality Checks: ${checksTotal} | Passed: ${checksPassed} | Errors: ${errors.length}\n`
+);
 process.stdout.write(`========================================\n\n`);
 
 if (errors.length > 0) {
   process.exit(1);
 }
-
