@@ -161,6 +161,9 @@ const eventSyncSchema = z.object({
    5. Application Endpoints
    ========================================================================== */
 
+/** Silently respond to browser favicon probes */
+app.get('/favicon.ico', (req, res) => res.status(204).end());
+
 /** Health verification check (Supported on /api/health and /health for Render monitoring) */
 app.get(['/api/health', '/health'], (req, res) => {
   res.json({
